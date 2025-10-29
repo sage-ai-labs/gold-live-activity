@@ -9,6 +9,10 @@ struct LiveActivityAttributes: ActivityAttributes {
     var progress: Double?
     var imageName: String?
     var dynamicIslandImageName: String?
+    
+    // Golden Hour custom attributes
+    var phase: String?
+    var dealEndTime: Double?
   }
 
   var name: String
