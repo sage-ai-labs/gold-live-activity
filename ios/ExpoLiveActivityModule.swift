@@ -25,6 +25,13 @@ public class ExpoLiveActivityModule: Module {
 
     @Field
     var dynamicIslandImageName: String?
+    
+    // Golden Hour custom fields
+    @Field
+    var phase: String?
+    
+    @Field
+    var dealEndTime: Double?
   }
 
   struct LiveActivityConfig: Record {
@@ -249,7 +256,11 @@ public class ExpoLiveActivityModule: Module {
           title: state.title,
           subtitle: state.subtitle,
           timerEndDateInMilliseconds: state.progressBar?.date,
-          progress: state.progressBar?.progress
+          progress: state.progressBar?.progress,
+          imageName: nil,
+          dynamicIslandImageName: nil,
+          phase: state.phase,
+          dealEndTime: state.dealEndTime
         )
 
         let activity = try Activity.request(
@@ -285,7 +296,11 @@ public class ExpoLiveActivityModule: Module {
           title: state.title,
           subtitle: state.subtitle,
           timerEndDateInMilliseconds: state.progressBar?.date,
-          progress: state.progressBar?.progress
+          progress: state.progressBar?.progress,
+          imageName: nil,
+          dynamicIslandImageName: nil,
+          phase: state.phase,
+          dealEndTime: state.dealEndTime
         )
         try await updateImages(state: state, newState: &newState)
         await activity.end(
@@ -312,7 +327,11 @@ public class ExpoLiveActivityModule: Module {
           title: state.title,
           subtitle: state.subtitle,
           timerEndDateInMilliseconds: state.progressBar?.date,
-          progress: state.progressBar?.progress
+          progress: state.progressBar?.progress,
+          imageName: nil,
+          dynamicIslandImageName: nil,
+          phase: state.phase,
+          dealEndTime: state.dealEndTime
         )
         try await updateImages(state: state, newState: &newState)
         await activity.update(ActivityContent(state: newState, staleDate: nil))
