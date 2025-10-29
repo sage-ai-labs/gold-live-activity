@@ -30,4 +30,13 @@ extension View {
   func onContainerSize(_ perform: @escaping (CGSize?) -> Void) -> some View {
     onPreferenceChange(ContainerSizeKey.self, perform: perform)
   }
+  
+  func applyImageSize(_ size: Int?) -> some View {
+    if let size = size {
+      let cgSize = CGFloat(size)
+      return AnyView(self.frame(width: cgSize, height: cgSize))
+    } else {
+      return AnyView(self)
+    }
+  }
 }
