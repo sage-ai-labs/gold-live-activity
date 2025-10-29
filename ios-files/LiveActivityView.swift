@@ -3,6 +3,48 @@ import WidgetKit
 
 #if canImport(ActivityKit)
 
+  // MARK: - Golden Hour Phase Helpers
+  
+  extension LiveActivityAttributes.ContentState {
+    var phaseBackgroundColor: Color {
+      switch phase {
+      case "before_start":
+        return Color(hex: "#F4FFB0") ?? Color.yellow.opacity(0.3)
+      case "active_coming":
+        return Color(hex: "#E7F86C") ?? Color.yellow.opacity(0.5)
+      case "active_last_5min":
+        return Color(hex: "#FFD700") ?? Color.yellow
+      case "active_last_min":
+        return Color(hex: "#FF6B6B") ?? Color.red.opacity(0.7)
+      case "ended":
+        return Color(hex: "#9E9E9E") ?? Color.gray
+      default:
+        return Color.clear
+      }
+    }
+    
+    var phaseMessage: String {
+      switch phase {
+      case "before_start":
+        return "⏰ Golden Hour Coming Soon"
+      case "active_coming":
+        return "🔥 Golden Hour Active - Time to Bid!"
+      case "active_last_5min":
+        return "⚡ Last 5 Minutes - Hurry!"
+      case "active_last_min":
+        return "🚨 FINAL MINUTE - BID NOW!"
+      case "ended":
+        return "✓ Golden Hour Ended"
+      default:
+        return ""
+      }
+    }
+    
+    var showFlipClock: Bool {
+      return phase != nil && dealEndTime != nil && phase != "ended"
+    }
+  }
+
   struct ConditionalForegroundViewModifier: ViewModifier {
     let color: String?
 
@@ -15,29 +57,9 @@ import WidgetKit
     }
   }
 
-  struct DebugLog: View {
-    #if DEBUG
-      private let message: String
-      init(_ message: String) {
-        self.message = message
-        print(message)
-      }
-
-      var body: some View {
-        Text(message)
-          .font(.caption2)
-          .foregroundStyle(.red)
-      }
-    #else
-      init(_: String) {}
-      var body: some View { EmptyView() }
-    #endif
-  }
-
   struct LiveActivityView: View {
     let contentState: LiveActivityAttributes.ContentState
     let attributes: LiveActivityAttributes
-    @State private var imageContainerSize: CGSize?
 
     var progressViewTint: Color? {
       attributes.progressViewTint.map { Color(hex: $0) }
@@ -54,103 +76,61 @@ import WidgetKit
       }
     }
 
+    @ViewBuilder
     private func alignedImage(imageName: String) -> some View {
-      let defaultHeight: CGFloat = 64
-      let defaultWidth: CGFloat = 64
-      let containerHeight = imageContainerSize?.height
-      let containerWidth = imageContainerSize?.width
-      let hasWidthConstraint = (attributes.imageWidthPercent != nil) || (attributes.imageWidth != nil)
-
-      let computedHeight: CGFloat? = {
-        if let percent = attributes.imageHeightPercent {
-          let clamped = min(max(percent, 0), 100) / 100.0
-          // Use the row height as a base. Fallback to default when row height is not measured yet.
-          let base = (containerHeight ?? defaultHeight)
-          return base * clamped
-        } else if let size = attributes.imageHeight {
-          return CGFloat(size)
-        } else if hasWidthConstraint {
-          // Mimic CSS: when only width is set, keep height automatic to preserve aspect ratio
-          return nil
-        } else {
-          // Mimic CSS: this works against CSS but provides a better default behavior.
-          // When no width/height is set, use a default size (64pt)
-          // Width will adjust automatically base on aspect ratio
-          return defaultHeight
+      VStack {
+        resizableImage(imageName: imageName)
+          .applyImageSize(attributes.imageSize)
+      }
+      .frame(maxHeight: .infinity, alignment: imageAlignment)
+    }
+    
+    // MARK: - Golden Hour FlipClock View
+    
+    @ViewBuilder
+    private func goldenHourContent() -> some View {
+      VStack(spacing: 16) {
+        // Phase message
+        Text(contentState.phaseMessage)
+          .font(.headline)
+          .fontWeight(.bold)
+          .foregroundColor(.black)
+          .multilineTextAlignment(.center)
+        
+        // FlipClock countdown
+        if let dealEndTime = contentState.dealEndTime {
+          CountdownClockView(dealEndTimeInMilliseconds: dealEndTime)
+            .frame(height: 80)
         }
-      }()
-
-      let computedWidth: CGFloat? = {
-        if let percent = attributes.imageWidthPercent {
-          let clamped = min(max(percent, 0), 100) / 100.0
-          let base = (containerWidth ?? defaultWidth)
-          return base * clamped
-        } else if let size = attributes.imageWidth {
-          return CGFloat(size)
-        } else {
-          return nil // Keep aspect fit based on height
-        }
-      }()
-
-      return ZStack(alignment: .center) {
-        Group {
-          let fit = attributes.contentFit ?? "cover"
-          switch fit {
-          case "contain":
-            Image.dynamic(assetNameOrPath: imageName).resizable().scaledToFit().frame(width: computedWidth, height: computedHeight)
-          case "fill":
-            Image.dynamic(assetNameOrPath: imageName).resizable().frame(
-              width: computedWidth,
-              height: computedHeight
-            )
-          case "none":
-            Image.dynamic(assetNameOrPath: imageName).renderingMode(.original).frame(width: computedWidth, height: computedHeight)
-          case "scale-down":
-            if let uiImage = UIImage.dynamic(assetNameOrPath: imageName) {
-              // Determine the target box. When width/height are nil, we use image's intrinsic dimension for comparison.
-              let targetHeight = computedHeight ?? uiImage.size.height
-              let targetWidth = computedWidth ?? uiImage.size.width
-              let shouldScaleDown = uiImage.size.height > targetHeight || uiImage.size.width > targetWidth
-
-              if shouldScaleDown {
-                Image(uiImage: uiImage)
-                  .resizable()
-                  .scaledToFit()
-                  .frame(width: computedWidth, height: computedHeight)
-              } else {
-                Image(uiImage: uiImage)
-                  .renderingMode(.original)
-                  .frame(width: min(uiImage.size.width, targetWidth), height: min(uiImage.size.height, targetHeight))
-              }
-            } else {
-              DebugLog("⚠️[ExpoLiveActivity] assetNameOrPath couldn't resolve to UIImage")
-            }
-          case "cover":
-            Image.dynamic(assetNameOrPath: imageName).resizable().scaledToFill().frame(
-              width: computedWidth,
-              height: computedHeight
-            ).clipped()
-          default:
-            DebugLog("⚠️[ExpoLiveActivity] Unknown contentFit '\(fit)'")
-          }
+        
+        // Optional subtitle
+        if let subtitle = contentState.subtitle {
+          Text(subtitle)
+            .font(.subheadline)
+            .foregroundColor(.black.opacity(0.7))
+            .multilineTextAlignment(.center)
         }
       }
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: imageAlignment)
-      .background(
-        GeometryReader { proxy in
-          Color.clear
-            .onAppear {
-              let s = proxy.size
-              if s.width > 0, s.height > 0 { imageContainerSize = s }
-            }
-            .onChange(of: proxy.size) { s in
-              if s.width > 0, s.height > 0 { imageContainerSize = s }
-            }
-        }
-      )
+      .padding(24)
+      .frame(maxWidth: .infinity)
+      .background(contentState.phaseBackgroundColor)
+      .cornerRadius(16)
     }
 
     var body: some View {
+      // If Golden Hour phase is active, show custom view
+      if contentState.showFlipClock {
+        goldenHourContent()
+      } else {
+        // Default expo-live-activity view
+        defaultView()
+      }
+    }
+    
+    // MARK: - Default View (Original expo-live-activity)
+    
+    @ViewBuilder
+    private func defaultView() -> some View {
       let defaultPadding = 24
 
       let top = CGFloat(
@@ -187,7 +167,6 @@ import WidgetKit
         let isLeftImage = position.hasPrefix("left")
         let hasImage = contentState.imageName != nil
         let effectiveStretch = isStretch && hasImage
-
         HStack(alignment: .center) {
           if hasImage, isLeftImage {
             if let imageName = contentState.imageName {
@@ -218,7 +197,7 @@ import WidgetKit
                   .modifier(ConditionalForegroundViewModifier(color: attributes.progressViewLabelColor))
               }
             }
-          }.layoutPriority(1)
+          }
 
           if hasImage, !isLeftImage { // right side (default)
             Spacer()
@@ -229,6 +208,7 @@ import WidgetKit
         }
 
         if !effectiveStretch {
+          // Bottom progress (hidden when using Stretch variants where progress is inline)
           if let date = contentState.timerEndDateInMilliseconds {
             ProgressView(timerInterval: Date.toTimerInterval(miliseconds: date))
               .tint(progressViewTint)
@@ -241,6 +221,26 @@ import WidgetKit
         }
       }
       .padding(EdgeInsets(top: top, leading: leading, bottom: bottom, trailing: trailing))
+    }
+  }
+  
+  // MARK: - Countdown Clock Wrapper
+  
+  struct CountdownClockView: View {
+    let dealEndTimeInMilliseconds: Double
+    @StateObject private var viewModel: CountdownViewModel
+    
+    init(dealEndTimeInMilliseconds: Double) {
+      self.dealEndTimeInMilliseconds = dealEndTimeInMilliseconds
+      _viewModel = StateObject(wrappedValue: CountdownViewModel(dealEndTimeInMilliseconds: dealEndTimeInMilliseconds))
+    }
+    
+    var body: some View {
+      ClockView(
+        hours: viewModel.hours,
+        minutes: viewModel.minutes,
+        seconds: viewModel.seconds
+      )
     }
   }
 
