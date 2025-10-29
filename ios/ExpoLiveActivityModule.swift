@@ -257,8 +257,6 @@ public class ExpoLiveActivityModule: Module {
           subtitle: state.subtitle,
           timerEndDateInMilliseconds: state.progressBar?.date,
           progress: state.progressBar?.progress,
-          imageName: nil,
-          dynamicIslandImageName: nil,
           phase: state.phase,
           dealEndTime: state.dealEndTime
         )
@@ -297,8 +295,6 @@ public class ExpoLiveActivityModule: Module {
           subtitle: state.subtitle,
           timerEndDateInMilliseconds: state.progressBar?.date,
           progress: state.progressBar?.progress,
-          imageName: nil,
-          dynamicIslandImageName: nil,
           phase: state.phase,
           dealEndTime: state.dealEndTime
         )
@@ -328,8 +324,6 @@ public class ExpoLiveActivityModule: Module {
           subtitle: state.subtitle,
           timerEndDateInMilliseconds: state.progressBar?.date,
           progress: state.progressBar?.progress,
-          imageName: nil,
-          dynamicIslandImageName: nil,
           phase: state.phase,
           dealEndTime: state.dealEndTime
         )
