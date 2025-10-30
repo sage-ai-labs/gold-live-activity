@@ -112,17 +112,19 @@ extension LiveActivityAttributes.ContentState {
     }
     
     /// Get countdown target for current phase
+    /// NOTE: During Golden Hour (active/activeSecondary/activeLastMin), 
+    /// the countdown is CONTINUOUS to the end time, not phase-specific.
+    /// Only before_start has a different target (counts to Golden Hour start).
     func getCountdownTarget() -> Double? {
         let currentPhase = getCurrentPhase()
         
         switch currentPhase {
         case .beforeStart:
+            // Count down to when Golden Hour starts
             return activeTime
-        case .active:
-            return activeSecondaryTime
-        case .activeSecondary:
-            return activeLastMinTime
-        case .activeLastMin:
+        case .active, .activeSecondary, .activeLastMin:
+            // ALL Golden Hour phases count to the SAME end time
+            // This creates one continuous countdown throughout Golden Hour
             return endedTime
         case .ended, .dismiss:
             return nil // No countdown when ended
