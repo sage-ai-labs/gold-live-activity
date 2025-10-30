@@ -101,10 +101,21 @@ struct LiveActivityWidget: Widget {
         if context.state.isGoldenHour {
           // Golden Hour: Show digital countdown with PHASE-SPECIFIC target
           // TimelineView ensures the phase recalculates automatically
-          TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+          TimelineView(.periodic(from: Date(), by: 1.0)) { timelineContext in
             // Recalculate countdown target on each update so phase transitions work
+            // Use timelineContext.date to force view refresh when timeline updates
+            let _ = timelineContext.date // Force evaluation of timeline context
+            
             if let countdownTarget = context.state.getCountdownTarget() {
               Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget))
+                .font(.system(size: 14))
+                .fontWeight(.semibold)
+                .foregroundColor(context.state.phaseColor)
+                .applyWidgetURL(from: context.attributes.deepLinkUrl)
+                .id("countdown-\(countdownTarget)") // Force view recreation when target changes
+            } else {
+              // Show a placeholder when no countdown is available
+              Text("--:--")
                 .font(.system(size: 14))
                 .fontWeight(.semibold)
                 .foregroundColor(context.state.phaseColor)
