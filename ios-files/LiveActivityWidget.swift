@@ -132,15 +132,10 @@ struct LiveActivityWidget: Widget {
         }
       }
     }
-    .contentStaleDate { context in
-      // Auto-dismiss after 5 minutes of ended phase
-      guard let endedTime = context.state.endedTime else {
-        return nil
-      }
-      let dismissTime = endedTime + (5 * 60 * 1000) // 5 minutes in milliseconds
-      return Date(timeIntervalSince1970: dismissTime / 1000) // Convert to seconds
-    }
   }
+  
+  // Note: contentStaleDate is not available in the current ActivityKit version
+  // Manual dismissal will be handled by React Native after 5 minutes of ended phase
   
   // MARK: - Golden Hour Expanded Views
   
