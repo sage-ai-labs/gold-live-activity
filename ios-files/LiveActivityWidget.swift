@@ -57,7 +57,7 @@ extension LiveActivityAttributes.ContentState {
   }
   
   var isGoldenHour: Bool {
-    return phase != nil && dealEndTime != nil
+    return phase != nil && endedTime != nil
   }
 }
 
@@ -72,8 +72,15 @@ struct LiveActivityAttributes: ActivityAttributes {
     var dynamicIslandImageName: String?
     
     // Golden Hour custom attributes
-    var phase: String?  // "before_start", "active_coming", "active_last_5min", "active_last_min", "ended"
-    var dealEndTime: Double?  // Timestamp in milliseconds for 7PM PT deadline
+    var phase: String?
+    var backgroundColor: String?
+    
+    // Phase timestamps (milliseconds since epoch)
+    var beforeStartTime: Double?
+    var activeTime: Double?
+    var activeSecondaryTime: Double?
+    var activeLastMinTime: Double?
+    var endedTime: Double?
   }
 
   var name: String
@@ -145,8 +152,8 @@ struct LiveActivityWidget: Widget {
         }
         
         DynamicIslandExpandedRegion(.bottom) {
-          if context.state.isGoldenHour, let dealEndTime = context.state.dealEndTime {
-            goldenHourExpandedBottom(dealEndTime: dealEndTime)
+          if context.state.isGoldenHour, let endedTime = context.state.endedTime {
+            goldenHourExpandedBottom(endedTime: endedTime)
               .padding(.horizontal, 5)
               .applyWidgetURL(from: context.attributes.deepLinkUrl)
           } else if let date = context.state.timerEndDateInMilliseconds {
@@ -169,9 +176,9 @@ struct LiveActivityWidget: Widget {
             .applyWidgetURL(from: context.attributes.deepLinkUrl)
         }
       } compactTrailing: {
-        if context.state.isGoldenHour, let dealEndTime = context.state.dealEndTime {
+        if context.state.isGoldenHour, let endedTime = context.state.endedTime {
           // Golden Hour: Show digital countdown
-          Text(timerInterval: Date.toTimerInterval(miliseconds: dealEndTime))
+          Text(timerInterval: Date.toTimerInterval(miliseconds: endedTime))
             .font(.system(size: 14))
             .fontWeight(.semibold)
             .foregroundColor(context.state.phaseColor)
@@ -232,14 +239,14 @@ struct LiveActivityWidget: Widget {
     }
   }
   
-  private func goldenHourExpandedBottom(dealEndTime: Double) -> some View {
+  private func goldenHourExpandedBottom(endedTime: Double) -> some View {
     VStack(spacing: 8) {
       Text("Time Remaining")
         .font(.caption)
         .foregroundStyle(.white.opacity(0.7))
       
       // Mini FlipClock for expanded view
-      CompactCountdownView(dealEndTimeInMilliseconds: dealEndTime)
+      CompactCountdownView(dealEndTimeInMilliseconds: endedTime)
         .frame(height: 40)
     }
     .padding(.top, 8)

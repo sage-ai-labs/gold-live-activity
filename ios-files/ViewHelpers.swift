@@ -40,3 +40,28 @@ extension View {
     }
   }
 }
+
+// MARK: - Countdown Clock View for Live Activities
+
+struct CountdownClockView: View {
+  let dealEndTimeInMilliseconds: Double
+  
+  private var dealEndTime: Date {
+    Date(timeIntervalSince1970: dealEndTimeInMilliseconds / 1000.0)
+  }
+  
+  private var timerInterval: ClosedRange<Date> {
+    Date.now ... max(Date.now, dealEndTime)
+  }
+  
+  var body: some View {
+    // Use iOS's native auto-updating Text timer
+    // This is what Uber and other apps use - it updates automatically
+    Text(timerInterval: timerInterval, countsDown: true)
+      .font(.system(size: 48, weight: .bold, design: .rounded))
+      .monospacedDigit()
+      .foregroundColor(.black)
+      .frame(height: 80)
+  }
+}
+

@@ -6,42 +6,8 @@ import WidgetKit
   // MARK: - Golden Hour Phase Helpers
   
   extension LiveActivityAttributes.ContentState {
-    var phaseBackgroundColor: Color {
-      switch phase {
-      case "before_start":
-        return Color(hex: "#F4FFB0") ?? Color.yellow.opacity(0.3)
-      case "active_coming":
-        return Color(hex: "#E7F86C") ?? Color.yellow.opacity(0.5)
-      case "active_last_5min":
-        return Color(hex: "#FFD700") ?? Color.yellow
-      case "active_last_min":
-        return Color(hex: "#FF6B6B") ?? Color.red.opacity(0.7)
-      case "ended":
-        return Color(hex: "#9E9E9E") ?? Color.gray
-      default:
-        return Color.clear
-      }
-    }
-    
-    var phaseMessage: String {
-      switch phase {
-      case "before_start":
-        return "⏰ Golden Hour Coming Soon"
-      case "active_coming":
-        return "🔥 Golden Hour Active - Time to Bid!"
-      case "active_last_5min":
-        return "⚡ Last 5 Minutes - Hurry!"
-      case "active_last_min":
-        return "🚨 FINAL MINUTE - BID NOW!"
-      case "ended":
-        return "✓ Golden Hour Ended"
-      default:
-        return ""
-      }
-    }
-    
-    var showFlipClock: Bool {
-      return phase != nil && dealEndTime != nil && phase != "ended"
+    var showGoldenHourView: Bool {
+      return self.phase != nil && self.phase != "ended" && self.endedTime != nil
     }
   }
 
@@ -85,47 +51,56 @@ import WidgetKit
       .frame(maxHeight: .infinity, alignment: imageAlignment)
     }
     
-    // MARK: - Golden Hour FlipClock View
-    
-    @ViewBuilder
-    private func goldenHourContent() -> some View {
-      VStack(spacing: 16) {
-        // Phase message
-        Text(contentState.phaseMessage)
-          .font(.headline)
-          .fontWeight(.bold)
-          .foregroundColor(.black)
-          .multilineTextAlignment(.center)
-        
-        // FlipClock countdown
-        if let dealEndTime = contentState.dealEndTime {
-          CountdownClockView(dealEndTimeInMilliseconds: dealEndTime)
-            .frame(height: 80)
-        }
-        
-        // Optional subtitle
-        if let subtitle = contentState.subtitle {
-          Text(subtitle)
-            .font(.subheadline)
-            .foregroundColor(.black.opacity(0.7))
-            .multilineTextAlignment(.center)
-        }
-      }
-      .padding(24)
-      .frame(maxWidth: .infinity)
-      .background(contentState.phaseBackgroundColor)
-      .cornerRadius(16)
-    }
+  // MARK: - Golden Hour Countdown View
+  
+  @ViewBuilder
+  private func goldenHourContent() -> some View {
+    // Determine if we should show countdown
+    let shouldShowCountdown = contentState.phase != nil && 
+                              contentState.phase != "ended" && 
+                              contentState.endedTime != nil
 
-    var body: some View {
-      // If Golden Hour phase is active, show custom view
-      if contentState.showFlipClock {
-        goldenHourContent()
-      } else {
-        // Default expo-live-activity view
-        defaultView()
+    VStack(spacing: 16) {
+      // Title from React Native (phase-appropriate message)
+      Text(contentState.title)
+        .font(.headline)
+        .multilineTextAlignment(.center)
+        .foregroundColor(Color.black.opacity(0.85))
+
+      // Native iOS countdown timer using endedTime
+      // This automatically updates without requiring pushes
+      if shouldShowCountdown, let endedTime = contentState.endedTime {
+        Text(timerInterval: Date.toTimerInterval(miliseconds: endedTime), countsDown: true)
+          .font(.system(size: 48, weight: .bold, design: .rounded))
+          .monospacedDigit()
+          .foregroundColor(Color.black.opacity(0.9))
+      }
+
+      // Subtitle from React Native
+      if let subtitle = contentState.subtitle {
+        Text(subtitle)
+          .font(.subheadline)
+          .multilineTextAlignment(.center)
+          .foregroundColor(Color.black.opacity(0.7))
       }
     }
+    .padding()
+    .frame(maxWidth: .infinity)
+    .background(
+      // Use backgroundColor from React Native, fallback to default
+      contentState.backgroundColor.flatMap { Color(hex: $0) } ?? Color(hex: "#F4FFB0")
+    )
+    .cornerRadius(16)
+  }  
+  var body: some View {
+    // If Golden Hour phase is active, show custom countdown view
+    if contentState.showGoldenHourView {
+      goldenHourContent()
+    } else {
+      // Default expo-live-activity view
+      defaultView()
+    }
+  }
     
     // MARK: - Default View (Original expo-live-activity)
     
@@ -221,26 +196,6 @@ import WidgetKit
         }
       }
       .padding(EdgeInsets(top: top, leading: leading, bottom: bottom, trailing: trailing))
-    }
-  }
-  
-  // MARK: - Countdown Clock Wrapper
-  
-  struct CountdownClockView: View {
-    let dealEndTimeInMilliseconds: Double
-    @StateObject private var viewModel: CountdownViewModel
-    
-    init(dealEndTimeInMilliseconds: Double) {
-      self.dealEndTimeInMilliseconds = dealEndTimeInMilliseconds
-      _viewModel = StateObject(wrappedValue: CountdownViewModel(dealEndTimeInMilliseconds: dealEndTimeInMilliseconds))
-    }
-    
-    var body: some View {
-      ClockView(
-        hours: viewModel.hours,
-        minutes: viewModel.minutes,
-        seconds: viewModel.seconds
-      )
     }
   }
 
