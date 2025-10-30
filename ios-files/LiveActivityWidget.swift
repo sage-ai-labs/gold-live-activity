@@ -8,7 +8,23 @@ import WidgetKit
 
 extension LiveActivityAttributes.ContentState {
   var phaseColor: Color {
-    return Color(hex: phaseColorHex)
+    return Color(hex: getPhaseColorHex())
+  }
+  
+  var phaseIcon: String {
+    return getPhaseIcon()
+  }
+  
+  var phaseColorHex: String {
+    return getPhaseColorHex()
+  }
+  
+  var phaseMessage: String {
+    return getPhaseMessage()
+  }
+  
+  var compactMessage: String {
+    return getCompactMessage()
   }
   
   var isGoldenHour: Bool {

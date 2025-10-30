@@ -47,7 +47,7 @@ extension LiveActivityAttributes.ContentState {
     }
     
     /// Get phase-specific icon
-    var phaseIcon: String {
+    func getPhaseIcon() -> String {
         let currentPhase = getCurrentPhase()
         switch currentPhase {
         case .beforeStart:
@@ -64,7 +64,7 @@ extension LiveActivityAttributes.ContentState {
     }
     
     /// Get phase-specific color
-    var phaseColorHex: String {
+    func getPhaseColorHex() -> String {
         let currentPhase = getCurrentPhase()
         switch currentPhase {
         case .beforeStart:
@@ -81,7 +81,7 @@ extension LiveActivityAttributes.ContentState {
     }
     
     /// Get phase-specific message
-    var phaseMessage: String {
+    func getPhaseMessage() -> String {
         let currentPhase = getCurrentPhase()
         switch currentPhase {
         case .beforeStart:
@@ -98,7 +98,7 @@ extension LiveActivityAttributes.ContentState {
     }
     
     /// Get compact phase message for Dynamic Island
-    var compactMessage: String {
+    func getCompactMessage() -> String {
         let currentPhase = getCurrentPhase()
         switch currentPhase {
         case .beforeStart:
@@ -111,20 +111,6 @@ extension LiveActivityAttributes.ContentState {
             return activeLastMinCompactMessage ?? "FINAL MIN!"
         case .ended, .dismiss:
             return endedCompactMessage ?? "Ended"
-        }
-    }
-        let currentPhase = getCurrentPhase()
-        switch currentPhase {
-        case .beforeStart:
-            return "Coming Soon"
-        case .active:
-            return "Active Now"
-        case .activeSecondary:
-            return "Last 5 Min"
-        case .activeLastMin:
-            return "FINAL MIN"
-        case .ended, .dismiss:
-            return "Ended"
         }
     }
     
