@@ -20,6 +20,32 @@ struct LiveActivityAttributes: ActivityAttributes {
     var activeSecondaryTime: Double?
     var activeLastMinTime: Double?
     var endedTime: Double?
+    
+    // Phase-specific visual assets (for push notification control)
+    var beforeStartIcon: String?
+    var beforeStartColor: String?
+    var beforeStartMessage: String?
+    var beforeStartCompactMessage: String?
+    
+    var activeIcon: String?
+    var activeColor: String?
+    var activeMessage: String?
+    var activeCompactMessage: String?
+    
+    var activeSecondaryIcon: String?
+    var activeSecondaryColor: String?
+    var activeSecondaryMessage: String?
+    var activeSecondaryCompactMessage: String?
+    
+    var activeLastMinIcon: String?
+    var activeLastMinColor: String?
+    var activeLastMinMessage: String?
+    var activeLastMinCompactMessage: String?
+    
+    var endedIcon: String?
+    var endedColor: String?
+    var endedMessage: String?
+    var endedCompactMessage: String?
   }
 
   var name: String

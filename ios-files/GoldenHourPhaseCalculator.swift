@@ -27,10 +27,13 @@ extension LiveActivityAttributes.ContentState {
         
         let now = Date().timeIntervalSince1970 * 1000 // Convert to milliseconds
         
-        // Check dismiss time if available (for showing ended phase before dismissing)
-        // For now, we show ended indefinitely until React Native stops it
+        // Check dismiss time if available
+        // If we're past ended + 5 minutes, consider it dismissed
+        let dismissTime = ended + (5 * 60 * 1000) // 5 minutes after ended
         
-        if now >= ended {
+        if now >= dismissTime {
+            return .dismiss
+        } else if now >= ended {
             return .ended
         } else if now >= activeLastMin {
             return .activeLastMin
@@ -48,15 +51,15 @@ extension LiveActivityAttributes.ContentState {
         let currentPhase = getCurrentPhase()
         switch currentPhase {
         case .beforeStart:
-            return "⏰"
+            return beforeStartIcon ?? "⏰"
         case .active:
-            return "🔥"
+            return activeIcon ?? "🔥"
         case .activeSecondary:
-            return "⚡"
+            return activeSecondaryIcon ?? "⚡"
         case .activeLastMin:
-            return "🚨"
+            return activeLastMinIcon ?? "🚨"
         case .ended, .dismiss:
-            return "✓"
+            return endedIcon ?? "✓"
         }
     }
     
@@ -65,15 +68,15 @@ extension LiveActivityAttributes.ContentState {
         let currentPhase = getCurrentPhase()
         switch currentPhase {
         case .beforeStart:
-            return "#F4FFB0" // Light yellow
+            return beforeStartColor ?? "#F4FFB0" // Light yellow
         case .active:
-            return "#E7F86C" // Yellow
+            return activeColor ?? "#E7F86C" // Yellow
         case .activeSecondary:
-            return "#FFD700" // Gold
+            return activeSecondaryColor ?? "#FFD700" // Gold
         case .activeLastMin:
-            return "#FF6B6B" // Red
+            return activeLastMinColor ?? "#FF6B6B" // Red
         case .ended, .dismiss:
-            return "#9E9E9E" // Gray
+            return endedColor ?? "#9E9E9E" // Gray
         }
     }
     
@@ -82,20 +85,34 @@ extension LiveActivityAttributes.ContentState {
         let currentPhase = getCurrentPhase()
         switch currentPhase {
         case .beforeStart:
-            return "⏰ Golden Hour Coming Soon"
+            return beforeStartMessage ?? "⏰ Golden Hour Coming Soon"
         case .active:
-            return "🔥 Golden Hour Active - Shop Now!"
+            return activeMessage ?? "🔥 Golden Hour Active - Shop Now!"
         case .activeSecondary:
-            return "⚡ Last 5 Minutes - Hurry!"
+            return activeSecondaryMessage ?? "⚡ Last 2 Minutes - Hurry!"
         case .activeLastMin:
-            return "🚨 FINAL MINUTE - SHOP NOW!"
+            return activeLastMinMessage ?? "🚨 FINAL MINUTE - SHOP NOW!"
         case .ended, .dismiss:
-            return "✓ Golden Hour Ended"
+            return endedMessage ?? "✓ Golden Hour Ended"
         }
     }
     
     /// Get compact phase message for Dynamic Island
     var compactMessage: String {
+        let currentPhase = getCurrentPhase()
+        switch currentPhase {
+        case .beforeStart:
+            return beforeStartCompactMessage ?? "Coming Soon"
+        case .active:
+            return activeCompactMessage ?? "Shop Now!"
+        case .activeSecondary:
+            return activeSecondaryCompactMessage ?? "Last 2 Min!"
+        case .activeLastMin:
+            return activeLastMinCompactMessage ?? "FINAL MIN!"
+        case .ended, .dismiss:
+            return endedCompactMessage ?? "Ended"
+        }
+    }
         let currentPhase = getCurrentPhase()
         switch currentPhase {
         case .beforeStart:
