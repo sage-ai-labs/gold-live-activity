@@ -45,8 +45,20 @@ import WidgetKit
     @ViewBuilder
     private func alignedImage(imageName: String) -> some View {
       VStack {
-        resizableImage(imageName: imageName)
-          .applyImageSize(attributes.imageSize)
+        let width = attributes.imageWidth.map { CGFloat($0) }
+        let height = attributes.imageHeight.map { CGFloat($0) }
+        
+        if let width = width, let height = height {
+          resizableImage(imageName: imageName, height: height, width: width)
+        } else if let width = width {
+          resizableImage(imageName: imageName)
+            .frame(width: width)
+        } else if let height = height {
+          resizableImage(imageName: imageName)
+            .frame(height: height)
+        } else {
+          resizableImage(imageName: imageName)
+        }
       }
       .frame(maxHeight: .infinity, alignment: imageAlignment)
     }

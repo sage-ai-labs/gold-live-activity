@@ -194,8 +194,11 @@ struct LiveActivityWidget: Widget {
         .font(.caption)
         .foregroundStyle(.white.opacity(0.7))
       
-      // Mini FlipClock for expanded view
-      CompactCountdownView(dealEndTimeInMilliseconds: endedTime)
+      // Native iOS countdown timer
+      Text(timerInterval: Date.toTimerInterval(miliseconds: endedTime), countsDown: true)
+        .font(.system(size: 32, weight: .bold, design: .rounded))
+        .monospacedDigit()
+        .foregroundColor(.white)
         .frame(height: 40)
     }
     .padding(.top, 8)
@@ -265,48 +268,5 @@ struct LiveActivityWidget: Widget {
       }
     )
     .progressViewStyle(.circular)
-  }
-}
-
-// MARK: - Compact Countdown for Dynamic Island
-
-struct CompactCountdownView: View {
-  let dealEndTimeInMilliseconds: Double
-  @StateObject private var viewModel: CountdownViewModel
-  
-  init(dealEndTimeInMilliseconds: Double) {
-    self.dealEndTimeInMilliseconds = dealEndTimeInMilliseconds
-    _viewModel = StateObject(wrappedValue: CountdownViewModel(dealEndTimeInMilliseconds: dealEndTimeInMilliseconds))
-  }
-  
-  var body: some View {
-    HStack(spacing: 6) {
-      TimeUnitView(value: viewModel.hours, label: "H")
-      Text(":")
-        .font(.system(size: 20, weight: .bold))
-        .foregroundColor(.white)
-      TimeUnitView(value: viewModel.minutes, label: "M")
-      Text(":")
-        .font(.system(size: 20, weight: .bold))
-        .foregroundColor(.white)
-      TimeUnitView(value: viewModel.seconds, label: "S")
-    }
-  }
-}
-
-struct TimeUnitView: View {
-  let value: String
-  let label: String
-  
-  var body: some View {
-    VStack(spacing: 2) {
-      Text(value)
-        .font(.system(size: 18, weight: .bold, design: .rounded))
-        .foregroundColor(.white)
-        .frame(width: 32)
-      Text(label)
-        .font(.system(size: 8, weight: .semibold))
-        .foregroundColor(.white.opacity(0.6))
-    }
   }
 }
