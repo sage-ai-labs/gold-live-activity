@@ -194,9 +194,10 @@ struct LiveActivityWidget: Widget {
         .font(.caption)
         .foregroundStyle(.white.opacity(0.7))
       
-      // Native iOS countdown timer
+      // Native iOS countdown timer with Manrope-Bold font
+      // Matches the app's ClockCountdown style
       Text(timerInterval: Date.toTimerInterval(miliseconds: endedTime), countsDown: true)
-        .font(.system(size: 32, weight: .bold, design: .rounded))
+        .font(.custom("Manrope-Bold", size: 32))
         .monospacedDigit()
         .foregroundColor(.white)
         .frame(height: 40)

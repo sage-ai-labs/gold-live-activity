@@ -79,13 +79,15 @@ import WidgetKit
         .multilineTextAlignment(.center)
         .foregroundColor(Color.black.opacity(0.85))
 
-      // Native iOS countdown timer using endedTime
+            // Native iOS countdown timer using endedTime
       // This automatically updates without requiring pushes
+      // Uses Manrope-Bold to match the app's ClockCountdown style
       if shouldShowCountdown, let endedTime = contentState.endedTime {
         Text(timerInterval: Date.toTimerInterval(miliseconds: endedTime), countsDown: true)
-          .font(.system(size: 48, weight: .bold, design: .rounded))
+          .font(.custom("Manrope-Bold", size: 48))
           .monospacedDigit()
           .foregroundColor(Color.black.opacity(0.9))
+          .multilineTextAlignment(.center)
       }
 
       // Subtitle from React Native

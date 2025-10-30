@@ -71,6 +71,21 @@ export function getWidgetFiles(targetPath: string) {
   const imagesXcassetsSource = path.join(liveActivityFilesPath, 'Assets.xcassets')
   copyFolderRecursiveSync(imagesXcassetsSource, targetPath)
 
+  // Copy fonts directory
+  const fontsSource = path.join(liveActivityFilesPath, 'Fonts')
+  if (fs.existsSync(fontsSource) && fs.lstatSync(fontsSource).isDirectory()) {
+    const fontsTarget = path.join(targetPath, 'Fonts')
+    if (!fs.existsSync(fontsTarget)) {
+      fs.mkdirSync(fontsTarget, { recursive: true })
+    }
+    const fontFiles = fs.readdirSync(fontsSource)
+    fontFiles.forEach((file) => {
+      const source = path.join(fontsSource, file)
+      const dest = path.join(fontsTarget, file)
+      fs.copyFileSync(source, dest)
+    })
+  }
+
   // Move images to assets directory
   if (fs.existsSync(imageAssetsPath) && fs.lstatSync(imageAssetsPath).isDirectory()) {
     const imagesXcassetsTarget = path.join(targetPath, 'Assets.xcassets')
