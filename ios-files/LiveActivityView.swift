@@ -65,64 +65,46 @@ import WidgetKit
     
   // MARK: - Golden Hour Countdown View
   
-  // Get the appropriate countdown target based on current phase
-  private func getCountdownTarget() -> Double? {
-    guard let phase = contentState.phase else { return nil }
-    
-    switch phase {
-    case "before_start":
-      // Count down to when Golden Hour starts (active phase)
-      return contentState.activeTime
-    case "active":
-      // Count down to when secondary phase starts
-      return contentState.activeSecondaryTime
-    case "active_secondary":
-      // Count down to when last minute starts
-      return contentState.activeLastMinTime
-    case "active_last_min":
-      // Count down to when Golden Hour ends
-      return contentState.endedTime
-    default:
-      return nil
-    }
-  }
-  
   @ViewBuilder
   private func goldenHourContent() -> some View {
-    VStack(spacing: 16) {
-      // Title from React Native (phase-appropriate message)
-      Text(contentState.title)
-        .font(.headline)
-        .multilineTextAlignment(.center)
-        .foregroundColor(Color.black.opacity(0.85))
-
-      // Native iOS countdown timer with PHASE-SPECIFIC target
-      // Each phase counts down to its own end time, not the final ended time
-      // This automatically updates without requiring pushes
-      // Uses Manrope-Bold to match the app's ClockCountdown style
-      if let countdownTarget = getCountdownTarget() {
-        Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget), countsDown: true)
-          .font(.custom("Manrope-Bold", size: 48))
-          .monospacedDigit()
-          .foregroundColor(Color.black.opacity(0.9))
+    // TimelineView ensures the phase recalculates every second
+    // This makes the Live Activity completely independent from React Native!
+    TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+      VStack(spacing: 16) {
+        // Title calculated from current phase (no React Native needed!)
+        Text(contentState.phaseMessage)
+          .font(.headline)
           .multilineTextAlignment(.center)
-      }
+          .foregroundColor(Color.black.opacity(0.85))
 
-      // Subtitle from React Native
-      if let subtitle = contentState.subtitle {
-        Text(subtitle)
-          .font(.subheadline)
-          .multilineTextAlignment(.center)
-          .foregroundColor(Color.black.opacity(0.7))
+        // Native iOS countdown timer with PHASE-SPECIFIC target
+        // Each phase counts down to its own end time, not the final ended time
+        // This automatically updates without requiring pushes
+        // Uses Manrope-Bold to match the app's ClockCountdown style
+        if let countdownTarget = contentState.getCountdownTarget() {
+          Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget), countsDown: true)
+            .font(.custom("Gunterz-Bold", size: 48))
+            .monospacedDigit()
+            .foregroundColor(Color.black.opacity(0.9))
+            .multilineTextAlignment(.center)
+        }
+
+        // Subtitle from React Native (optional)
+        if let subtitle = contentState.subtitle {
+          Text(subtitle)
+            .font(.subheadline)
+            .multilineTextAlignment(.center)
+            .foregroundColor(Color.black.opacity(0.7))
+        }
       }
+      .padding()
+      .frame(maxWidth: .infinity)
+      .background(
+        // Background color calculated from current phase
+        Color(hex: contentState.phaseColorHex)
+      )
+      .cornerRadius(16)
     }
-    .padding()
-    .frame(maxWidth: .infinity)
-    .background(
-      // Use backgroundColor from React Native, fallback to default
-      contentState.backgroundColor.flatMap { Color(hex: $0) } ?? Color(hex: "#F4FFB0")
-    )
-    .cornerRadius(16)
   }  
   var body: some View {
     // If Golden Hour phase is active, show custom countdown view

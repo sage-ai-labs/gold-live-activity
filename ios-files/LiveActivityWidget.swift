@@ -3,61 +3,16 @@ import SwiftUI
 import WidgetKit
 
 // MARK: - Golden Hour Phase Extensions
+// Note: These extensions are kept for backward compatibility
+// The actual phase calculation happens in GoldenHourPhaseCalculator.swift
 
 extension LiveActivityAttributes.ContentState {
-  var phaseIcon: String {
-    switch phase {
-    case "before_start":
-      return "⏰"
-    case "active_coming":
-      return "🔥"
-    case "active_last_5min":
-      return "⚡"
-    case "active_last_min":
-      return "🚨"
-    case "ended":
-      return "✓"
-    default:
-      return ""
-    }
-  }
-  
   var phaseColor: Color {
-    switch phase {
-    case "before_start":
-      return .yellow
-    case "active_coming":
-      return .orange
-    case "active_last_5min":
-      return .yellow
-    case "active_last_min":
-      return .red
-    case "ended":
-      return .gray
-    default:
-      return .blue
-    }
-  }
-  
-  var compactMessage: String {
-    switch phase {
-    case "before_start":
-      return "Coming Soon"
-    case "active_coming":
-      return "Active Now"
-    case "active_last_5min":
-      return "Last 5 Min"
-    case "active_last_min":
-      return "FINAL MIN"
-    case "ended":
-      return "Ended"
-    default:
-      return ""
-    }
+    return Color(hex: phaseColorHex)
   }
   
   var isGoldenHour: Bool {
-    return phase != nil && endedTime != nil
+    return beforeStartTime != nil && endedTime != nil
   }
 }
 
@@ -115,23 +70,28 @@ struct LiveActivityWidget: Widget {
         }
       } compactLeading: {
         if context.state.isGoldenHour {
-          // Golden Hour: Show phase icon
-          Text(context.state.phaseIcon)
-            .font(.system(size: 18))
-            .applyWidgetURL(from: context.attributes.deepLinkUrl)
+          // Golden Hour: Show phase icon with auto-updating phase
+          TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+            Text(context.state.phaseIcon)
+              .font(.system(size: 18))
+              .applyWidgetURL(from: context.attributes.deepLinkUrl)
+          }
         } else if let dynamicIslandImageName = context.state.dynamicIslandImageName {
           resizableImage(imageName: dynamicIslandImageName)
             .frame(maxWidth: 23, maxHeight: 23)
             .applyWidgetURL(from: context.attributes.deepLinkUrl)
         }
       } compactTrailing: {
-        if context.state.isGoldenHour, let countdownTarget = getCountdownTarget(state: context.state) {
+        if context.state.isGoldenHour, let countdownTarget = context.state.getCountdownTarget() {
           // Golden Hour: Show digital countdown with PHASE-SPECIFIC target
-          Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget))
-            .font(.system(size: 14))
-            .fontWeight(.semibold)
-            .foregroundColor(context.state.phaseColor)
-            .applyWidgetURL(from: context.attributes.deepLinkUrl)
+          // TimelineView ensures the phase recalculates automatically
+          TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+            Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget))
+              .font(.system(size: 14))
+              .fontWeight(.semibold)
+              .foregroundColor(context.state.phaseColor)
+              .applyWidgetURL(from: context.attributes.deepLinkUrl)
+          }
         } else if let date = context.state.timerEndDateInMilliseconds {
           compactTimer(
             endDate: date,
@@ -141,10 +101,12 @@ struct LiveActivityWidget: Widget {
         }
       } minimal: {
         if context.state.isGoldenHour {
-          // Golden Hour: Show phase icon in minimal state
-          Text(context.state.phaseIcon)
-            .font(.system(size: 16))
-            .applyWidgetURL(from: context.attributes.deepLinkUrl)
+          // Golden Hour: Show phase icon in minimal state with auto-update
+          TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+            Text(context.state.phaseIcon)
+              .font(.system(size: 16))
+              .applyWidgetURL(from: context.attributes.deepLinkUrl)
+          }
         } else if let date = context.state.timerEndDateInMilliseconds {
           compactTimer(
             endDate: date,
@@ -158,76 +120,61 @@ struct LiveActivityWidget: Widget {
   
   // MARK: - Golden Hour Expanded Views
   
-  // Get the appropriate countdown target based on current phase
-  private func getCountdownTarget(state: LiveActivityAttributes.ContentState) -> Double? {
-    guard let phase = state.phase else { return nil }
-    
-    switch phase {
-    case "before_start":
-      // Count down to when Golden Hour starts (active phase)
-      return state.activeTime
-    case "active":
-      // Count down to when secondary phase starts
-      return state.activeSecondaryTime
-    case "active_secondary":
-      // Count down to when last minute starts
-      return state.activeLastMinTime
-    case "active_last_min":
-      // Count down to when Golden Hour ends
-      return state.endedTime
-    default:
-      return nil
-    }
-  }
-  
   private func goldenHourExpandedLeading(state: LiveActivityAttributes.ContentState) -> some View {
-    VStack(alignment: .leading, spacing: 4) {
-      Spacer()
-      HStack(spacing: 6) {
-        Text(state.phaseIcon)
-          .font(.title2)
-        Text(state.compactMessage)
-          .font(.title3)
-          .fontWeight(.bold)
-          .foregroundStyle(state.phaseColor)
+    // TimelineView ensures phase recalculates every second
+    TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+      VStack(alignment: .leading, spacing: 4) {
+        Spacer()
+        HStack(spacing: 6) {
+          Text(state.phaseIcon)
+            .font(.title2)
+          Text(state.compactMessage)
+            .font(.title3)
+            .fontWeight(.bold)
+            .foregroundStyle(state.phaseColor)
+        }
+        Text("Golden Hour")
+          .font(.caption)
+          .foregroundStyle(.white.opacity(0.7))
+        Spacer()
       }
-      Text("Golden Hour")
-        .font(.caption)
-        .foregroundStyle(.white.opacity(0.7))
-      Spacer()
     }
   }
   
   private func goldenHourExpandedTrailing(state: LiveActivityAttributes.ContentState) -> some View {
-    VStack(spacing: 4) {
-      Spacer()
-      Text(state.phaseIcon)
-        .font(.system(size: 40))
-      Text("Ends at 7PM PT")
-        .font(.caption2)
-        .foregroundStyle(.white.opacity(0.6))
-      Spacer()
+    TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+      VStack(spacing: 4) {
+        Spacer()
+        Text(state.phaseIcon)
+          .font(.system(size: 40))
+        Text("Ends at 7PM PT")
+          .font(.caption2)
+          .foregroundStyle(.white.opacity(0.6))
+        Spacer()
+      }
     }
   }
   
   private func goldenHourExpandedBottom(state: LiveActivityAttributes.ContentState) -> some View {
-    VStack(spacing: 8) {
-      Text("Time Remaining")
-        .font(.caption)
-        .foregroundStyle(.white.opacity(0.7))
-      
-      // Native iOS countdown timer with PHASE-SPECIFIC target
-      // Each phase counts down to its own end time, not the final ended time
-      // Uses Manrope-Bold font to match the app's ClockCountdown style
-      if let countdownTarget = getCountdownTarget(state: state) {
-        Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget), countsDown: true)
-          .font(.custom("Manrope-Bold", size: 32))
-          .monospacedDigit()
-          .foregroundColor(.white)
-          .frame(height: 40)
+    TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+      VStack(spacing: 8) {
+        Text("Time Remaining")
+          .font(.caption)
+          .foregroundStyle(.white.opacity(0.7))
+        
+        // Native iOS countdown timer with PHASE-SPECIFIC target
+        // Each phase counts down to its own end time, not the final ended time
+        // Uses Manrope-Bold font to match the app's ClockCountdown style
+        if let countdownTarget = state.getCountdownTarget() {
+          Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget), countsDown: true)
+            .font(.custom("Manrope-Bold", size: 32))
+            .monospacedDigit()
+            .foregroundColor(.white)
+            .frame(height: 40)
+        }
       }
+      .padding(.top, 8)
     }
-    .padding(.top, 8)
   }
   
   // MARK: - Default Views (Original expo-live-activity)
