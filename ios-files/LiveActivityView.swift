@@ -7,7 +7,7 @@ import WidgetKit
   
   extension LiveActivityAttributes.ContentState {
     var showGoldenHourView: Bool {
-      return self.phase != nil && self.phase != "ended" && self.endedTime != nil
+      return self.phase != nil && self.endedTime != nil
     }
   }
 
