@@ -65,13 +65,30 @@ import WidgetKit
     
   // MARK: - Golden Hour Countdown View
   
+  // Get the appropriate countdown target based on current phase
+  private func getCountdownTarget() -> Double? {
+    guard let phase = contentState.phase else { return nil }
+    
+    switch phase {
+    case "before_start":
+      // Count down to when Golden Hour starts (active phase)
+      return contentState.activeTime
+    case "active":
+      // Count down to when secondary phase starts
+      return contentState.activeSecondaryTime
+    case "active_secondary":
+      // Count down to when last minute starts
+      return contentState.activeLastMinTime
+    case "active_last_min":
+      // Count down to when Golden Hour ends
+      return contentState.endedTime
+    default:
+      return nil
+    }
+  }
+  
   @ViewBuilder
   private func goldenHourContent() -> some View {
-    // Determine if we should show countdown
-    let shouldShowCountdown = contentState.phase != nil && 
-                              contentState.phase != "ended" && 
-                              contentState.endedTime != nil
-
     VStack(spacing: 16) {
       // Title from React Native (phase-appropriate message)
       Text(contentState.title)
@@ -79,11 +96,12 @@ import WidgetKit
         .multilineTextAlignment(.center)
         .foregroundColor(Color.black.opacity(0.85))
 
-            // Native iOS countdown timer using endedTime
+      // Native iOS countdown timer with PHASE-SPECIFIC target
+      // Each phase counts down to its own end time, not the final ended time
       // This automatically updates without requiring pushes
       // Uses Manrope-Bold to match the app's ClockCountdown style
-      if shouldShowCountdown, let endedTime = contentState.endedTime {
-        Text(timerInterval: Date.toTimerInterval(miliseconds: endedTime), countsDown: true)
+      if let countdownTarget = getCountdownTarget() {
+        Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget), countsDown: true)
           .font(.custom("Manrope-Bold", size: 48))
           .monospacedDigit()
           .foregroundColor(Color.black.opacity(0.9))

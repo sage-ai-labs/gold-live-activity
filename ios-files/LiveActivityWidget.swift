@@ -101,8 +101,8 @@ struct LiveActivityWidget: Widget {
         }
         
         DynamicIslandExpandedRegion(.bottom) {
-          if context.state.isGoldenHour, let endedTime = context.state.endedTime {
-            goldenHourExpandedBottom(endedTime: endedTime)
+          if context.state.isGoldenHour {
+            goldenHourExpandedBottom(state: context.state)
               .padding(.horizontal, 5)
               .applyWidgetURL(from: context.attributes.deepLinkUrl)
           } else if let date = context.state.timerEndDateInMilliseconds {
@@ -125,9 +125,9 @@ struct LiveActivityWidget: Widget {
             .applyWidgetURL(from: context.attributes.deepLinkUrl)
         }
       } compactTrailing: {
-        if context.state.isGoldenHour, let endedTime = context.state.endedTime {
-          // Golden Hour: Show digital countdown
-          Text(timerInterval: Date.toTimerInterval(miliseconds: endedTime))
+        if context.state.isGoldenHour, let countdownTarget = getCountdownTarget(state: context.state) {
+          // Golden Hour: Show digital countdown with PHASE-SPECIFIC target
+          Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget))
             .font(.system(size: 14))
             .fontWeight(.semibold)
             .foregroundColor(context.state.phaseColor)
@@ -157,6 +157,28 @@ struct LiveActivityWidget: Widget {
   }
   
   // MARK: - Golden Hour Expanded Views
+  
+  // Get the appropriate countdown target based on current phase
+  private func getCountdownTarget(state: LiveActivityAttributes.ContentState) -> Double? {
+    guard let phase = state.phase else { return nil }
+    
+    switch phase {
+    case "before_start":
+      // Count down to when Golden Hour starts (active phase)
+      return state.activeTime
+    case "active":
+      // Count down to when secondary phase starts
+      return state.activeSecondaryTime
+    case "active_secondary":
+      // Count down to when last minute starts
+      return state.activeLastMinTime
+    case "active_last_min":
+      // Count down to when Golden Hour ends
+      return state.endedTime
+    default:
+      return nil
+    }
+  }
   
   private func goldenHourExpandedLeading(state: LiveActivityAttributes.ContentState) -> some View {
     VStack(alignment: .leading, spacing: 4) {
@@ -188,19 +210,22 @@ struct LiveActivityWidget: Widget {
     }
   }
   
-  private func goldenHourExpandedBottom(endedTime: Double) -> some View {
+  private func goldenHourExpandedBottom(state: LiveActivityAttributes.ContentState) -> some View {
     VStack(spacing: 8) {
       Text("Time Remaining")
         .font(.caption)
         .foregroundStyle(.white.opacity(0.7))
       
-      // Native iOS countdown timer with Manrope-Bold font
-      // Matches the app's ClockCountdown style
-      Text(timerInterval: Date.toTimerInterval(miliseconds: endedTime), countsDown: true)
-        .font(.custom("Manrope-Bold", size: 32))
-        .monospacedDigit()
-        .foregroundColor(.white)
-        .frame(height: 40)
+      // Native iOS countdown timer with PHASE-SPECIFIC target
+      // Each phase counts down to its own end time, not the final ended time
+      // Uses Manrope-Bold font to match the app's ClockCountdown style
+      if let countdownTarget = getCountdownTarget(state: state) {
+        Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget), countsDown: true)
+          .font(.custom("Manrope-Bold", size: 32))
+          .monospacedDigit()
+          .foregroundColor(.white)
+          .frame(height: 40)
+      }
     }
     .padding(.top, 8)
   }
