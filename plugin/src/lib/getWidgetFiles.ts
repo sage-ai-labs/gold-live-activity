@@ -142,6 +142,11 @@ export function copyFileSync(source: string, target: string) {
     targetFile = path.join(target, path.basename(source))
   }
 
+  // Skip if source is a directory (will be handled separately)
+  if (fs.lstatSync(source).isDirectory()) {
+    return
+  }
+
   fs.writeFileSync(targetFile, fs.readFileSync(source))
 }
 
