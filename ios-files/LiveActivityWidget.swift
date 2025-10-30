@@ -98,15 +98,18 @@ struct LiveActivityWidget: Widget {
             .applyWidgetURL(from: context.attributes.deepLinkUrl)
         }
       } compactTrailing: {
-        if context.state.isGoldenHour, let countdownTarget = context.state.getCountdownTarget() {
+        if context.state.isGoldenHour {
           // Golden Hour: Show digital countdown with PHASE-SPECIFIC target
           // TimelineView ensures the phase recalculates automatically
           TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
-            Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget))
-              .font(.system(size: 14))
-              .fontWeight(.semibold)
-              .foregroundColor(context.state.phaseColor)
-              .applyWidgetURL(from: context.attributes.deepLinkUrl)
+            // Recalculate countdown target on each update so phase transitions work
+            if let countdownTarget = context.state.getCountdownTarget() {
+              Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget))
+                .font(.system(size: 14))
+                .fontWeight(.semibold)
+                .foregroundColor(context.state.phaseColor)
+                .applyWidgetURL(from: context.attributes.deepLinkUrl)
+            }
           }
         } else if let date = context.state.timerEndDateInMilliseconds {
           compactTimer(

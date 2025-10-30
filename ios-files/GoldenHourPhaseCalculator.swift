@@ -27,6 +27,14 @@ extension LiveActivityAttributes.ContentState {
         
         let now = Date().timeIntervalSince1970 * 1000 // Convert to milliseconds
         
+        // Debug logging (will appear in Console.app when debugging)
+        #if DEBUG
+        let nowDate = Date(timeIntervalSince1970: now / 1000)
+        let activeDate = Date(timeIntervalSince1970: active / 1000)
+        print("[LiveActivity] Phase check - Now: \(nowDate), Active: \(activeDate)")
+        print("[LiveActivity] Comparison - now >= active: \(now >= active)")
+        #endif
+        
         // Check dismiss time if available
         // If we're past ended + 5 minutes, consider it dismissed
         let dismissTime = ended + (5 * 60 * 1000) // 5 minutes after ended
@@ -120,15 +128,24 @@ extension LiveActivityAttributes.ContentState {
     /// Only before_start has a different target (counts to Golden Hour start).
     func getCountdownTarget() -> Double? {
         let currentPhase = getCurrentPhase()
+        let now = Date().timeIntervalSince1970 * 1000 // Convert to milliseconds
         
         switch currentPhase {
         case .beforeStart:
             // Count down to when Golden Hour starts
-            return activeTime
+            // Safety check: if activeTime is in the past or equal to now, return nil
+            guard let active = activeTime, active > now else {
+                return nil
+            }
+            return active
         case .active, .activeSecondary, .activeLastMin:
             // ALL Golden Hour phases count to the SAME end time
             // This creates one continuous countdown throughout Golden Hour
-            return endedTime
+            // Safety check: if endedTime is in the past or equal to now, return nil
+            guard let ended = endedTime, ended > now else {
+                return nil
+            }
+            return ended
         case .ended, .dismiss:
             return nil // No countdown when ended
         }
