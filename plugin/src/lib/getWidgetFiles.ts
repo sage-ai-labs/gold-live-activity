@@ -82,7 +82,10 @@ export function getWidgetFiles(targetPath: string) {
     fontFiles.forEach((file) => {
       const source = path.join(fontsSource, file)
       const dest = path.join(fontsTarget, file)
-      fs.copyFileSync(source, dest)
+      // Only copy if it's a file (not a directory)
+      if (fs.lstatSync(source).isFile()) {
+        fs.copyFileSync(source, dest)
+      }
     })
   }
 
