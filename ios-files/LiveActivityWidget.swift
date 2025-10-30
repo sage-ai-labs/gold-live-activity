@@ -41,10 +41,6 @@ struct LiveActivityWidget: Widget {
         )
         .activitySystemActionForegroundColor(Color.black)
         .applyWidgetURL(from: context.attributes.deepLinkUrl)
-    } contentStaleDate: { context in
-      // Auto-dismiss after 5 minutes of ended phase
-      let dismissTime = context.state.ended + (5 * 60 * 1000)
-      return Date(timeIntervalSince1970: dismissTime / 1000)
     } dynamicIsland: { context in
       DynamicIsland {
         // MARK: - Expanded Regions
@@ -135,6 +131,14 @@ struct LiveActivityWidget: Widget {
           ).applyWidgetURL(from: context.attributes.deepLinkUrl)
         }
       }
+    }
+    .contentStaleDate { context in
+      // Auto-dismiss after 5 minutes of ended phase
+      guard let endedTime = context.state.endedTime else {
+        return nil
+      }
+      let dismissTime = endedTime + (5 * 60 * 1000) // 5 minutes in milliseconds
+      return Date(timeIntervalSince1970: dismissTime / 1000) // Convert to seconds
     }
   }
   
