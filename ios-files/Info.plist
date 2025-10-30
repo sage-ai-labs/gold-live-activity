@@ -7,5 +7,15 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widgetkit-extension</string>
 	</dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Manrope-Regular.ttf</string>
+		<string>Manrope-Medium.ttf</string>
+		<string>Manrope-SemiBold.ttf</string>
+		<string>Manrope-Bold.ttf</string>
+		<string>Gunterz-Regular.ttf</string>
+		<string>Gunterz-Medium.ttf</string>
+		<string>Gunterz-Bold.ttf</string>
+	</array>
 </dict>
 </plist>
