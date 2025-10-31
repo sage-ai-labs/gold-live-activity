@@ -63,24 +63,22 @@ import WidgetKit
       .frame(maxHeight: .infinity, alignment: imageAlignment)
     }
     
-  // MARK: - Golden Hour Countdown View
+    // MARK: - Golden Hour Countdown View
   
   @ViewBuilder
   private func goldenHourContent() -> some View {
-    // TimelineView ensures the phase recalculates every second
-    // This makes the Live Activity completely independent from React Native!
-    TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+    // Create explicit timeline entries for phase transitions
+    let timeline = createPhaseTimeline()
+    
+    TimelineView(timeline) { context in
       VStack(spacing: 16) {
-        // Title calculated from current phase (no React Native needed!)
+        // Title recalculated at each timeline entry (phase transitions)
         Text(contentState.phaseMessage)
           .font(.headline)
           .multilineTextAlignment(.center)
           .foregroundColor(Color.black.opacity(0.85))
 
-        // Native iOS countdown timer with PHASE-SPECIFIC target
-        // Each phase counts down to its own end time, not the final ended time
-        // This automatically updates without requiring pushes
-        // Uses Manrope-Bold to match the app's ClockCountdown style
+        // Native iOS countdown timer
         if let countdownTarget = contentState.getCountdownTarget() {
           Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget), countsDown: true)
             .font(.custom("Gunterz-Bold", size: 48))
@@ -100,12 +98,56 @@ import WidgetKit
       .padding()
       .frame(maxWidth: .infinity)
       .background(
-        // Background color calculated from current phase
+        // Background color recalculated at each timeline entry
         Color(hex: contentState.phaseColorHex)
       )
-      .cornerRadius(16)
     }
-  }  
+  }
+  
+  // Create timeline with entries at each phase transition
+  private func createPhaseTimeline() -> Timeline<Date> {
+    var entries: [Date] = [Date.now]
+    
+    // Add entries for each phase transition time
+    if let active = contentState.activeTime {
+      let activeDate = Date(timeIntervalSince1970: active / 1000)
+      if activeDate > Date.now {
+        entries.append(activeDate)
+      }
+    }
+    
+    if let activeSecondary = contentState.activeSecondaryTime {
+      let activeSecondaryDate = Date(timeIntervalSince1970: activeSecondary / 1000)
+      if activeSecondaryDate > Date.now {
+        entries.append(activeSecondaryDate)
+      }
+    }
+    
+    if let activeLastMin = contentState.activeLastMinTime {
+      let activeLastMinDate = Date(timeIntervalSince1970: activeLastMin / 1000)
+      if activeLastMinDate > Date.now {
+        entries.append(activeLastMinDate)
+      }
+    }
+    
+    if let ended = contentState.endedTime {
+      let endedDate = Date(timeIntervalSince1970: ended / 1000)
+      if endedDate > Date.now {
+        entries.append(endedDate)
+      }
+    }
+    
+    // Sort entries chronologically
+    entries.sort()
+    
+    print("[LiveActivity] 📅 Created timeline with \(entries.count) entries:")
+    for (index, date) in entries.enumerated() {
+      print("  Entry \(index): \(date)")
+    }
+    
+    // Policy: .atEnd means "reload when we reach the last entry"
+    return Timeline(entries: entries, policy: .atEnd)
+  }
   var body: some View {
     // If Golden Hour phase is active, show custom countdown view
     if contentState.showGoldenHourView {

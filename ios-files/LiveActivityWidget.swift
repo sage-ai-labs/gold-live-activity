@@ -86,8 +86,9 @@ struct LiveActivityWidget: Widget {
         }
       } compactLeading: {
         if context.state.isGoldenHour {
-          // Golden Hour: Show phase icon with auto-updating phase
-          TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+          // Golden Hour: Show phase icon with timeline updates at phase transitions
+          let timeline = createPhaseTimeline(state: context.state)
+          TimelineView(timeline) { _ in
             Text(context.state.phaseIcon)
               .font(.system(size: 18))
               .applyWidgetURL(from: context.attributes.deepLinkUrl)
@@ -99,22 +100,16 @@ struct LiveActivityWidget: Widget {
         }
       } compactTrailing: {
         if context.state.isGoldenHour {
-          // Golden Hour: Show digital countdown with PHASE-SPECIFIC target
-          // TimelineView ensures the phase recalculates automatically
-          TimelineView(.periodic(from: Date(), by: 1.0)) { timelineContext in
-            // Recalculate countdown target on each update so phase transitions work
-            // Use timelineContext.date to force view refresh when timeline updates
-            let _ = timelineContext.date // Force evaluation of timeline context
-            
+          // Golden Hour: Show digital countdown with timeline updates
+          let timeline = createPhaseTimeline(state: context.state)
+          TimelineView(timeline) { context in
             if let countdownTarget = context.state.getCountdownTarget() {
               Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget))
                 .font(.system(size: 14))
                 .fontWeight(.semibold)
                 .foregroundColor(context.state.phaseColor)
                 .applyWidgetURL(from: context.attributes.deepLinkUrl)
-                .id("countdown-\(countdownTarget)") // Force view recreation when target changes
             } else {
-              // Show a placeholder when no countdown is available
               Text("--:--")
                 .font(.system(size: 14))
                 .fontWeight(.semibold)
@@ -131,8 +126,9 @@ struct LiveActivityWidget: Widget {
         }
       } minimal: {
         if context.state.isGoldenHour {
-          // Golden Hour: Show phase icon in minimal state with auto-update
-          TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+          // Golden Hour: Show phase icon in minimal state with timeline updates
+          let timeline = createPhaseTimeline(state: context.state)
+          TimelineView(timeline) { _ in
             Text(context.state.phaseIcon)
               .font(.system(size: 16))
               .applyWidgetURL(from: context.attributes.deepLinkUrl)
@@ -154,8 +150,10 @@ struct LiveActivityWidget: Widget {
   // MARK: - Golden Hour Expanded Views
   
   private func goldenHourExpandedLeading(state: LiveActivityAttributes.ContentState) -> some View {
-    // TimelineView ensures phase recalculates every second
-    TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+    // Create timeline with phase transition entries
+    let timeline = createPhaseTimeline(state: state)
+    
+    TimelineView(timeline) { context in
       VStack(alignment: .leading, spacing: 4) {
         Spacer()
         HStack(spacing: 6) {
@@ -175,7 +173,9 @@ struct LiveActivityWidget: Widget {
   }
   
   private func goldenHourExpandedTrailing(state: LiveActivityAttributes.ContentState) -> some View {
-    TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+    let timeline = createPhaseTimeline(state: state)
+    
+    TimelineView(timeline) { context in
       VStack(spacing: 4) {
         Spacer()
         Text(state.phaseIcon)
@@ -189,15 +189,15 @@ struct LiveActivityWidget: Widget {
   }
   
   private func goldenHourExpandedBottom(state: LiveActivityAttributes.ContentState) -> some View {
-    TimelineView(.periodic(from: Date(), by: 1.0)) { _ in
+    let timeline = createPhaseTimeline(state: state)
+    
+    TimelineView(timeline) { context in
       VStack(spacing: 8) {
         Text("Time Remaining")
           .font(.caption)
           .foregroundStyle(.white.opacity(0.7))
         
-        // Native iOS countdown timer with PHASE-SPECIFIC target
-        // Each phase counts down to its own end time, not the final ended time
-        // Uses Manrope-Bold font to match the app's ClockCountdown style
+        // Native iOS countdown timer
         if let countdownTarget = state.getCountdownTarget() {
           Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget), countsDown: true)
             .font(.custom("Manrope-Bold", size: 32))
@@ -208,6 +208,45 @@ struct LiveActivityWidget: Widget {
       }
       .padding(.top, 8)
     }
+  }
+  
+  // Create timeline with entries at each phase transition
+  private func createPhaseTimeline(state: LiveActivityAttributes.ContentState) -> Timeline<Date> {
+    var entries: [Date] = [Date.now]
+    
+    // Add entries for each phase transition time
+    if let active = state.activeTime {
+      let activeDate = Date(timeIntervalSince1970: active / 1000)
+      if activeDate > Date.now {
+        entries.append(activeDate)
+      }
+    }
+    
+    if let activeSecondary = state.activeSecondaryTime {
+      let activeSecondaryDate = Date(timeIntervalSince1970: activeSecondary / 1000)
+      if activeSecondaryDate > Date.now {
+        entries.append(activeSecondaryDate)
+      }
+    }
+    
+    if let activeLastMin = state.activeLastMinTime {
+      let activeLastMinDate = Date(timeIntervalSince1970: activeLastMin / 1000)
+      if activeLastMinDate > Date.now {
+        entries.append(activeLastMinDate)
+      }
+    }
+    
+    if let ended = state.endedTime {
+      let endedDate = Date(timeIntervalSince1970: ended / 1000)
+      if endedDate > Date.now {
+        entries.append(endedDate)
+      }
+    }
+    
+    // Sort entries chronologically
+    entries.sort()
+    
+    return Timeline(entries: entries, policy: .atEnd)
   }
   
   // MARK: - Default Views (Original expo-live-activity)
