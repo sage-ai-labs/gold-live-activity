@@ -104,45 +104,50 @@ import WidgetKit
     }
   }
   
+  // Timeline entry that conforms to TimelineEntry protocol
+  private struct PhaseTimelineEntry: TimelineEntry {
+    let date: Date
+  }
+  
   // Create timeline with entries at each phase transition
-  private func createPhaseTimeline() -> Timeline<Date> {
-    var entries: [Date] = [Date.now]
+  private func createPhaseTimeline() -> Timeline<PhaseTimelineEntry> {
+    var entries: [PhaseTimelineEntry] = [PhaseTimelineEntry(date: Date.now)]
     
     // Add entries for each phase transition time
     if let active = contentState.activeTime {
       let activeDate = Date(timeIntervalSince1970: active / 1000)
       if activeDate > Date.now {
-        entries.append(activeDate)
+        entries.append(PhaseTimelineEntry(date: activeDate))
       }
     }
     
     if let activeSecondary = contentState.activeSecondaryTime {
       let activeSecondaryDate = Date(timeIntervalSince1970: activeSecondary / 1000)
       if activeSecondaryDate > Date.now {
-        entries.append(activeSecondaryDate)
+        entries.append(PhaseTimelineEntry(date: activeSecondaryDate))
       }
     }
     
     if let activeLastMin = contentState.activeLastMinTime {
       let activeLastMinDate = Date(timeIntervalSince1970: activeLastMin / 1000)
       if activeLastMinDate > Date.now {
-        entries.append(activeLastMinDate)
+        entries.append(PhaseTimelineEntry(date: activeLastMinDate))
       }
     }
     
     if let ended = contentState.endedTime {
       let endedDate = Date(timeIntervalSince1970: ended / 1000)
       if endedDate > Date.now {
-        entries.append(endedDate)
+        entries.append(PhaseTimelineEntry(date: endedDate))
       }
     }
     
     // Sort entries chronologically
-    entries.sort()
+    entries.sort { $0.date < $1.date }
     
     print("[LiveActivity] 📅 Created timeline with \(entries.count) entries:")
-    for (index, date) in entries.enumerated() {
-      print("  Entry \(index): \(date)")
+    for (index, entry) in entries.enumerated() {
+      print("  Entry \(index): \(entry.date)")
     }
     
     // Policy: .atEnd means "reload when we reach the last entry"
