@@ -2,6 +2,24 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
+// MARK: - Custom Timeline Schedule for Phase Transitions
+
+struct PhaseTransitionSchedule: TimelineSchedule {
+  let dates: [Date]
+  
+  func entries(from startDate: Date, mode: TimelineScheduleMode) -> AnyIterator<Date> {
+    var index = 0
+    let futureDates = dates.filter { $0 >= startDate }.sorted()
+    
+    return AnyIterator {
+      guard index < futureDates.count else { return nil }
+      let date = futureDates[index]
+      index += 1
+      return date
+    }
+  }
+}
+
 // MARK: - Golden Hour Phase Extensions
 // Note: These extensions are kept for backward compatibility
 // The actual phase calculation happens in GoldenHourPhaseCalculator.swift
@@ -86,11 +104,11 @@ struct LiveActivityWidget: Widget {
         }
       } compactLeading: {
         if context.state.isGoldenHour {
-          // Golden Hour: Show phase icon with periodic refresh
-          TimelineView(.periodic(from: Date.now, by: 1.0)) { _ in
+          // Golden Hour: Show phase icon with updates at phase transitions
+          let schedule = createPhaseSchedule(state: context.state)
+          TimelineView(schedule) { _ in
             Text(context.state.phaseIcon)
               .font(.system(size: 18))
-              .id(context.state.getCurrentPhase().rawValue)
               .applyWidgetURL(from: context.attributes.deepLinkUrl)
           }
         } else if let dynamicIslandImageName = context.state.dynamicIslandImageName {
@@ -100,14 +118,14 @@ struct LiveActivityWidget: Widget {
         }
       } compactTrailing: {
         if context.state.isGoldenHour {
-          // Golden Hour: Show digital countdown with periodic refresh
-          TimelineView(.periodic(from: Date.now, by: 1.0)) { _ in
+          // Golden Hour: Show digital countdown with phase transition updates
+          let schedule = createPhaseSchedule(state: context.state)
+          TimelineView(schedule) { _ in
             if let countdownTarget = context.state.getCountdownTarget() {
               Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget))
                 .font(.system(size: 14))
                 .fontWeight(.semibold)
                 .foregroundColor(context.state.phaseColor)
-                .id(context.state.getCurrentPhase().rawValue)
                 .applyWidgetURL(from: context.attributes.deepLinkUrl)
             } else {
               Text("--:--")
@@ -126,11 +144,11 @@ struct LiveActivityWidget: Widget {
         }
       } minimal: {
         if context.state.isGoldenHour {
-          // Golden Hour: Show phase icon in minimal state with periodic refresh
-          TimelineView(.periodic(from: Date.now, by: 1.0)) { _ in
+          // Golden Hour: Show phase icon in minimal state
+          let schedule = createPhaseSchedule(state: context.state)
+          TimelineView(schedule) { _ in
             Text(context.state.phaseIcon)
               .font(.system(size: 16))
-              .id(context.state.getCurrentPhase().rawValue)
               .applyWidgetURL(from: context.attributes.deepLinkUrl)
           }
         } else if let date = context.state.timerEndDateInMilliseconds {
@@ -150,8 +168,9 @@ struct LiveActivityWidget: Widget {
   // MARK: - Golden Hour Expanded Views
   
   private func goldenHourExpandedLeading(state: LiveActivityAttributes.ContentState) -> some View {
-    // Use periodic refresh to update phase-dependent content
-    TimelineView(.periodic(from: Date.now, by: 1.0)) { _ in
+    let schedule = createPhaseSchedule(state: state)
+    
+    TimelineView(schedule) { _ in
       VStack(alignment: .leading, spacing: 4) {
         Spacer()
         HStack(spacing: 6) {
@@ -167,12 +186,13 @@ struct LiveActivityWidget: Widget {
           .foregroundStyle(.white.opacity(0.7))
         Spacer()
       }
-      .id(state.getCurrentPhase().rawValue)
     }
   }
   
   private func goldenHourExpandedTrailing(state: LiveActivityAttributes.ContentState) -> some View {
-    TimelineView(.periodic(from: Date.now, by: 1.0)) { _ in
+    let schedule = createPhaseSchedule(state: state)
+    
+    TimelineView(schedule) { _ in
       VStack(spacing: 4) {
         Spacer()
         Text(state.phaseIcon)
@@ -182,12 +202,13 @@ struct LiveActivityWidget: Widget {
           .foregroundStyle(.white.opacity(0.6))
         Spacer()
       }
-      .id(state.getCurrentPhase().rawValue)
     }
   }
   
   private func goldenHourExpandedBottom(state: LiveActivityAttributes.ContentState) -> some View {
-    TimelineView(.periodic(from: Date.now, by: 1.0)) { _ in
+    let schedule = createPhaseSchedule(state: state)
+    
+    TimelineView(schedule) { _ in
       VStack(spacing: 8) {
         Text("Time Remaining")
           .font(.caption)
@@ -203,8 +224,43 @@ struct LiveActivityWidget: Widget {
         }
       }
       .padding(.top, 8)
-      .id(state.getCurrentPhase().rawValue)
     }
+  }
+  
+  // Helper to create timeline schedule with phase transition dates
+  private func createPhaseSchedule(state: LiveActivityAttributes.ContentState) -> PhaseTransitionSchedule {
+    var dates: [Date] = [Date.now]
+    
+    // Add date for each phase transition
+    if let active = state.activeTime {
+      let activeDate = Date(timeIntervalSince1970: active / 1000)
+      if activeDate > Date.now {
+        dates.append(activeDate)
+      }
+    }
+    
+    if let activeSecondary = state.activeSecondaryTime {
+      let activeSecondaryDate = Date(timeIntervalSince1970: activeSecondary / 1000)
+      if activeSecondaryDate > Date.now {
+        dates.append(activeSecondaryDate)
+      }
+    }
+    
+    if let activeLastMin = state.activeLastMinTime {
+      let activeLastMinDate = Date(timeIntervalSince1970: activeLastMin / 1000)
+      if activeLastMinDate > Date.now {
+        dates.append(activeLastMinDate)
+      }
+    }
+    
+    if let ended = state.endedTime {
+      let endedDate = Date(timeIntervalSince1970: ended / 1000)
+      if endedDate > Date.now {
+        dates.append(endedDate)
+      }
+    }
+    
+    return PhaseTransitionSchedule(dates: dates)
   }
   
   // MARK: - Default Views (Original expo-live-activity)

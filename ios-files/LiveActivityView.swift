@@ -3,6 +3,24 @@ import WidgetKit
 
 #if canImport(ActivityKit)
 
+  // MARK: - Custom Timeline Schedule for Phase Transitions
+
+  struct PhaseTransitionSchedule: TimelineSchedule {
+    let dates: [Date]
+    
+    func entries(from startDate: Date, mode: TimelineScheduleMode) -> AnyIterator<Date> {
+      var index = 0
+      let futureDates = dates.filter { $0 >= startDate }.sorted()
+      
+      return AnyIterator {
+        guard index < futureDates.count else { return nil }
+        let date = futureDates[index]
+        index += 1
+        return date
+      }
+    }
+  }
+
   // MARK: - Golden Hour Phase Helpers
   
   extension LiveActivityAttributes.ContentState {
@@ -67,10 +85,11 @@ import WidgetKit
   
   @ViewBuilder
   private func goldenHourContent() -> some View {
-    // Use periodic schedule to refresh view at phase transitions
-    TimelineView(.periodic(from: Date.now, by: 1.0)) { context in
+    let schedule = createPhaseSchedule()
+    
+    TimelineView(schedule) { _ in
       VStack(spacing: 16) {
-        // Title recalculated at each timeline entry (phase transitions)
+        // Title recalculated at each phase transition
         Text(contentState.phaseMessage)
           .font(.headline)
           .multilineTextAlignment(.center)
@@ -96,14 +115,47 @@ import WidgetKit
       .padding()
       .frame(maxWidth: .infinity)
       .background(
-        // Background color recalculated at each timeline entry
+        // Background color recalculated at each phase transition
         Color(hex: contentState.phaseColorHex)
       )
-      .id(contentState.getCurrentPhase().rawValue) // Force refresh when phase changes
     }
   }
   
+  // Helper to create timeline schedule with phase transition dates
+  private func createPhaseSchedule() -> PhaseTransitionSchedule {
+    var dates: [Date] = [Date.now]
+    
+    // Add date for each phase transition
+    if let active = contentState.activeTime {
+      let activeDate = Date(timeIntervalSince1970: active / 1000)
+      if activeDate > Date.now {
+        dates.append(activeDate)
+      }
     }
+    
+    if let activeSecondary = contentState.activeSecondaryTime {
+      let activeSecondaryDate = Date(timeIntervalSince1970: activeSecondary / 1000)
+      if activeSecondaryDate > Date.now {
+        dates.append(activeSecondaryDate)
+      }
+    }
+    
+    if let activeLastMin = contentState.activeLastMinTime {
+      let activeLastMinDate = Date(timeIntervalSince1970: activeLastMin / 1000)
+      if activeLastMinDate > Date.now {
+        dates.append(activeLastMinDate)
+      }
+    }
+    
+    if let ended = contentState.endedTime {
+      let endedDate = Date(timeIntervalSince1970: ended / 1000)
+      if endedDate > Date.now {
+        dates.append(endedDate)
+      }
+    }
+    
+    return PhaseTransitionSchedule(dates: dates)
+  }    }
   
   var body: some View {
   var body: some View {
