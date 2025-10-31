@@ -86,11 +86,11 @@ struct LiveActivityWidget: Widget {
         }
       } compactLeading: {
         if context.state.isGoldenHour {
-          // Golden Hour: Show phase icon with timeline updates at phase transitions
-          let timeline = createPhaseTimeline(state: context.state)
-          TimelineView(timeline) { _ in
+          // Golden Hour: Show phase icon with periodic refresh
+          TimelineView(.periodic(from: Date.now, by: 1.0)) { _ in
             Text(context.state.phaseIcon)
               .font(.system(size: 18))
+              .id(context.state.getCurrentPhase().rawValue)
               .applyWidgetURL(from: context.attributes.deepLinkUrl)
           }
         } else if let dynamicIslandImageName = context.state.dynamicIslandImageName {
@@ -100,14 +100,14 @@ struct LiveActivityWidget: Widget {
         }
       } compactTrailing: {
         if context.state.isGoldenHour {
-          // Golden Hour: Show digital countdown with timeline updates
-          let timeline = createPhaseTimeline(state: context.state)
-          TimelineView(timeline) { context in
+          // Golden Hour: Show digital countdown with periodic refresh
+          TimelineView(.periodic(from: Date.now, by: 1.0)) { _ in
             if let countdownTarget = context.state.getCountdownTarget() {
               Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget))
                 .font(.system(size: 14))
                 .fontWeight(.semibold)
                 .foregroundColor(context.state.phaseColor)
+                .id(context.state.getCurrentPhase().rawValue)
                 .applyWidgetURL(from: context.attributes.deepLinkUrl)
             } else {
               Text("--:--")
@@ -126,11 +126,11 @@ struct LiveActivityWidget: Widget {
         }
       } minimal: {
         if context.state.isGoldenHour {
-          // Golden Hour: Show phase icon in minimal state with timeline updates
-          let timeline = createPhaseTimeline(state: context.state)
-          TimelineView(timeline) { _ in
+          // Golden Hour: Show phase icon in minimal state with periodic refresh
+          TimelineView(.periodic(from: Date.now, by: 1.0)) { _ in
             Text(context.state.phaseIcon)
               .font(.system(size: 16))
+              .id(context.state.getCurrentPhase().rawValue)
               .applyWidgetURL(from: context.attributes.deepLinkUrl)
           }
         } else if let date = context.state.timerEndDateInMilliseconds {
@@ -150,10 +150,8 @@ struct LiveActivityWidget: Widget {
   // MARK: - Golden Hour Expanded Views
   
   private func goldenHourExpandedLeading(state: LiveActivityAttributes.ContentState) -> some View {
-    // Create timeline with phase transition entries
-    let timeline = createPhaseTimeline(state: state)
-    
-    TimelineView(timeline) { context in
+    // Use periodic refresh to update phase-dependent content
+    TimelineView(.periodic(from: Date.now, by: 1.0)) { _ in
       VStack(alignment: .leading, spacing: 4) {
         Spacer()
         HStack(spacing: 6) {
@@ -169,13 +167,12 @@ struct LiveActivityWidget: Widget {
           .foregroundStyle(.white.opacity(0.7))
         Spacer()
       }
+      .id(state.getCurrentPhase().rawValue)
     }
   }
   
   private func goldenHourExpandedTrailing(state: LiveActivityAttributes.ContentState) -> some View {
-    let timeline = createPhaseTimeline(state: state)
-    
-    TimelineView(timeline) { context in
+    TimelineView(.periodic(from: Date.now, by: 1.0)) { _ in
       VStack(spacing: 4) {
         Spacer()
         Text(state.phaseIcon)
@@ -185,13 +182,12 @@ struct LiveActivityWidget: Widget {
           .foregroundStyle(.white.opacity(0.6))
         Spacer()
       }
+      .id(state.getCurrentPhase().rawValue)
     }
   }
   
   private func goldenHourExpandedBottom(state: LiveActivityAttributes.ContentState) -> some View {
-    let timeline = createPhaseTimeline(state: state)
-    
-    TimelineView(timeline) { context in
+    TimelineView(.periodic(from: Date.now, by: 1.0)) { _ in
       VStack(spacing: 8) {
         Text("Time Remaining")
           .font(.caption)
@@ -207,46 +203,8 @@ struct LiveActivityWidget: Widget {
         }
       }
       .padding(.top, 8)
+      .id(state.getCurrentPhase().rawValue)
     }
-  }
-  
-  // Create timeline with entries at each phase transition
-  private func createPhaseTimeline(state: LiveActivityAttributes.ContentState) -> Timeline<PhaseTimelineEntry> {
-    var entries: [PhaseTimelineEntry] = [PhaseTimelineEntry(date: Date.now)]
-    
-    // Add entries for each phase transition time
-    if let active = state.activeTime {
-      let activeDate = Date(timeIntervalSince1970: active / 1000)
-      if activeDate > Date.now {
-        entries.append(PhaseTimelineEntry(date: activeDate))
-      }
-    }
-    
-    if let activeSecondary = state.activeSecondaryTime {
-      let activeSecondaryDate = Date(timeIntervalSince1970: activeSecondary / 1000)
-      if activeSecondaryDate > Date.now {
-        entries.append(PhaseTimelineEntry(date: activeSecondaryDate))
-      }
-    }
-    
-    if let activeLastMin = state.activeLastMinTime {
-      let activeLastMinDate = Date(timeIntervalSince1970: activeLastMin / 1000)
-      if activeLastMinDate > Date.now {
-        entries.append(PhaseTimelineEntry(date: activeLastMinDate))
-      }
-    }
-    
-    if let ended = state.endedTime {
-      let endedDate = Date(timeIntervalSince1970: ended / 1000)
-      if endedDate > Date.now {
-        entries.append(PhaseTimelineEntry(date: endedDate))
-      }
-    }
-    
-    // Sort entries chronologically
-    entries.sort { $0.date < $1.date }
-    
-    return Timeline(entries: entries, policy: .atEnd)
   }
   
   // MARK: - Default Views (Original expo-live-activity)
@@ -314,9 +272,4 @@ struct LiveActivityWidget: Widget {
     )
     .progressViewStyle(.circular)
   }
-}
-
-// Timeline entry that conforms to TimelineEntry protocol
-private struct PhaseTimelineEntry: TimelineEntry {
-  let date: Date
 }

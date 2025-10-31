@@ -67,10 +67,8 @@ import WidgetKit
   
   @ViewBuilder
   private func goldenHourContent() -> some View {
-    // Create explicit timeline entries for phase transitions
-    let timeline = createPhaseTimeline()
-    
-    TimelineView(timeline) { context in
+    // Use periodic schedule to refresh view at phase transitions
+    TimelineView(.periodic(from: Date.now, by: 1.0)) { context in
       VStack(spacing: 16) {
         // Title recalculated at each timeline entry (phase transitions)
         Text(contentState.phaseMessage)
@@ -101,58 +99,13 @@ import WidgetKit
         // Background color recalculated at each timeline entry
         Color(hex: contentState.phaseColorHex)
       )
+      .id(contentState.getCurrentPhase().rawValue) // Force refresh when phase changes
     }
   }
   
-  // Timeline entry that conforms to TimelineEntry protocol
-  private struct PhaseTimelineEntry: TimelineEntry {
-    let date: Date
-  }
+    }
   
-  // Create timeline with entries at each phase transition
-  private func createPhaseTimeline() -> Timeline<PhaseTimelineEntry> {
-    var entries: [PhaseTimelineEntry] = [PhaseTimelineEntry(date: Date.now)]
-    
-    // Add entries for each phase transition time
-    if let active = contentState.activeTime {
-      let activeDate = Date(timeIntervalSince1970: active / 1000)
-      if activeDate > Date.now {
-        entries.append(PhaseTimelineEntry(date: activeDate))
-      }
-    }
-    
-    if let activeSecondary = contentState.activeSecondaryTime {
-      let activeSecondaryDate = Date(timeIntervalSince1970: activeSecondary / 1000)
-      if activeSecondaryDate > Date.now {
-        entries.append(PhaseTimelineEntry(date: activeSecondaryDate))
-      }
-    }
-    
-    if let activeLastMin = contentState.activeLastMinTime {
-      let activeLastMinDate = Date(timeIntervalSince1970: activeLastMin / 1000)
-      if activeLastMinDate > Date.now {
-        entries.append(PhaseTimelineEntry(date: activeLastMinDate))
-      }
-    }
-    
-    if let ended = contentState.endedTime {
-      let endedDate = Date(timeIntervalSince1970: ended / 1000)
-      if endedDate > Date.now {
-        entries.append(PhaseTimelineEntry(date: endedDate))
-      }
-    }
-    
-    // Sort entries chronologically
-    entries.sort { $0.date < $1.date }
-    
-    print("[LiveActivity] 📅 Created timeline with \(entries.count) entries:")
-    for (index, entry) in entries.enumerated() {
-      print("  Entry \(index): \(entry.date)")
-    }
-    
-    // Policy: .atEnd means "reload when we reach the last entry"
-    return Timeline(entries: entries, policy: .atEnd)
-  }
+  var body: some View {
   var body: some View {
     // If Golden Hour phase is active, show custom countdown view
     if contentState.showGoldenHourView {
