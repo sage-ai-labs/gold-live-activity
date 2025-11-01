@@ -15,160 +15,134 @@ enum GoldenHourPhase: String {
 extension LiveActivityAttributes.ContentState {
     /// Calculate the current phase based on timestamps and current time
     /// This allows the Live Activity to self-update without React Native running
-    func getCurrentPhase() -> GoldenHourPhase {
-        guard let beforeStart = beforeStartTime,
-              let active = activeTime,
-              let activeSecondary = activeSecondaryTime,
-              let activeLastMin = activeLastMinTime,
-              let ended = endedTime else {
-            // Fallback to phase from React Native if timestamps aren't available
-            print("[LiveActivity] ⚠️ Missing timestamps, falling back to phase: \(phase ?? "none")")
-            return GoldenHourPhase(rawValue: phase ?? "before_start") ?? .beforeStart
-        }
-        
-        let now = Date().timeIntervalSince1970 * 1000 // Convert to milliseconds
-        
-        // Debug logging - ALWAYS show this to diagnose issues
-        let nowDate = Date(timeIntervalSince1970: now / 1000)
-        let beforeStartDate = Date(timeIntervalSince1970: beforeStart / 1000)
-        let activeDate = Date(timeIntervalSince1970: active / 1000)
-        let endedDate = Date(timeIntervalSince1970: ended / 1000)
-        
-        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        print("[LiveActivity] PHASE CHECK")
-        print("  Now:         \(nowDate) (\(now))")
-        print("  BeforeStart: \(beforeStartDate) (\(beforeStart))")
-        print("  Active:      \(activeDate) (\(active))")
-        print("  Ended:       \(endedDate) (\(ended))")
-        print("  Seconds until active: \((active - now) / 1000)")
-        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        
-        // Check dismiss time if available
-        // If we're past ended + 5 minutes, consider it dismissed
-        let dismissTime = ended + (5 * 60 * 1000) // 5 minutes after ended
-        
-        let detectedPhase: GoldenHourPhase
-        if now >= dismissTime {
-            detectedPhase = .dismiss
-        } else if now >= ended {
-            detectedPhase = .ended
-        } else if now >= activeLastMin {
-            detectedPhase = .activeLastMin
-        } else if now >= activeSecondary {
-            detectedPhase = .activeSecondary
-        } else if now >= active {
-            detectedPhase = .active
-        } else {
-            detectedPhase = .beforeStart
-        }
-        
-        print("[LiveActivity] 🎯 Detected Phase: \(detectedPhase.rawValue)")
-        return detectedPhase
-    }
+// MARK: - Timer Range Support for Apple's Live Activity Pattern
+
+/// Returns the timer range for native iOS countdown display
+/// This follows Apple's pattern: `Text(timerInterval: timerRange, countsDown: true)`
+func getTimerRange(at date: Date) -> ClosedRange<Date>? {
+    guard let countdownTarget = getCountdownTarget(at: date) else { return nil }
     
-    /// Get phase-specific icon
-    func getPhaseIcon() -> String {
-        let currentPhase = getCurrentPhase()
+    let now = date
+    let target = Date(timeIntervalSince1970: countdownTarget / 1000)
+    
+    // Ensure we don't create invalid ranges (target must be after now)
+    guard target > now else { return nil }
+    
+    return now...target
+}
+
+// MARK: - Updated Functions for Timeline Context Synchronization
+
+func getCurrentPhase(at date: Date) -> GoldenHourPhase {
+    let now = date.timeIntervalSince1970 * 1000
+    
+    // Safely unwrap optional timestamp values
+    guard let beforeStart = beforeStartTime,
+          let active = activeTime,
+          let activeSecondary = activeSecondaryTime,
+          let activeLastMin = activeLastMinTime,
+          let ended = endedTime else {
+        // If timestamps are missing, default to ended state
+        return .ended
+    }
+
+    if now < beforeStart {
+        return .beforeStart
+    } else if now >= beforeStart && now < active {
+        return .active
+    } else if now >= active && now < activeSecondary {
+        return .activeSecondary
+    } else if now >= activeSecondary && now < activeLastMin {
+        return .activeLastMin
+    } else if now >= activeLastMin && now < ended {
+        return .activeLastMin // Continue last minute until ended
+    } else {
+        return .ended
+    }
+}
+
+func getCountdownTarget(at date: Date) -> Double? {
+    let currentPhase = getCurrentPhase(at: date)
+    
+    switch currentPhase {
+    case .beforeStart:
+        return activeTime
+    case .active:
+        return activeSecondaryTime
+    case .activeSecondary:
+        return activeLastMinTime
+    case .activeLastMin:
+        return endedTime
+    case .ended, .dismiss:
+        return nil
+    }
+}    /// Get phase-specific icon
+    func phaseIcon(at currentTime: Date = Date()) -> String {
+        let currentPhase = getCurrentPhase(at: currentTime)
         switch currentPhase {
         case .beforeStart:
-            return beforeStartIcon ?? "⏰"
+            return "⏰"
         case .active:
-            return activeIcon ?? "🔥"
+            return "🔥"
         case .activeSecondary:
-            return activeSecondaryIcon ?? "⚡"
+            return "⚡"
         case .activeLastMin:
-            return activeLastMinIcon ?? "🚨"
+            return "🚨"
         case .ended, .dismiss:
-            return endedIcon ?? "✓"
+            return "✓"
         }
     }
     
     /// Get phase-specific color
-    func getPhaseColorHex() -> String {
-        let currentPhase = getCurrentPhase()
+    func phaseColorHex(at currentTime: Date = Date()) -> String {
+        let currentPhase = getCurrentPhase(at: currentTime)
         switch currentPhase {
         case .beforeStart:
-            return beforeStartColor ?? "#F4FFB0" // Light yellow
+            return "#F4FFB0" // Light yellow
         case .active:
-            return activeColor ?? "#E7F86C" // Yellow
+            return "#E7F86C" // Yellow
         case .activeSecondary:
-            return activeSecondaryColor ?? "#FFD700" // Gold
+            return "#FFD700" // Gold
         case .activeLastMin:
-            return activeLastMinColor ?? "#FF6B6B" // Red
+            return "#FF6B6B" // Red
         case .ended, .dismiss:
-            return endedColor ?? "#9E9E9E" // Gray
+            return "#9E9E9E" // Gray
         }
     }
     
     /// Get phase-specific message
-    func getPhaseMessage() -> String {
-        let currentPhase = getCurrentPhase()
+    func phaseMessage(at currentTime: Date = Date()) -> String {
+        let currentPhase = getCurrentPhase(at: currentTime)
         switch currentPhase {
         case .beforeStart:
-            return beforeStartMessage ?? "⏰ Golden Hour Coming Soon"
+            return "⏰ Golden Hour Coming Soon"
         case .active:
-            return activeMessage ?? "🔥 Golden Hour Active - Shop Now!"
+            return "🔥 Golden Hour Active - Shop Now!"
         case .activeSecondary:
-            return activeSecondaryMessage ?? "⚡ Last 2 Minutes - Hurry!"
+            return "⚡ Last 5 Minutes - Hurry!"
         case .activeLastMin:
-            return activeLastMinMessage ?? "🚨 FINAL MINUTE - SHOP NOW!"
+            return "🚨 FINAL MINUTE - SHOP NOW!"
         case .ended, .dismiss:
-            return endedMessage ?? "✓ Golden Hour Ended"
+            return "✓ Golden Hour Ended"
         }
     }
     
     /// Get compact phase message for Dynamic Island
-    func getCompactMessage() -> String {
-        let currentPhase = getCurrentPhase()
+    func compactMessage(at currentTime: Date = Date()) -> String {
+        let currentPhase = getCurrentPhase(at: currentTime)
         switch currentPhase {
         case .beforeStart:
-            return beforeStartCompactMessage ?? "Coming Soon"
+            return "Coming Soon"
         case .active:
-            return activeCompactMessage ?? "Shop Now!"
+            return "Active Now"
         case .activeSecondary:
-            return activeSecondaryCompactMessage ?? "Last 2 Min!"
+            return "Last 5 Min"
         case .activeLastMin:
-            return activeLastMinCompactMessage ?? "FINAL MIN!"
+            return "FINAL MIN"
         case .ended, .dismiss:
-            return endedCompactMessage ?? "Ended"
+            return "Ended"
         }
     }
     
-    /// Get countdown target for current phase
-    /// NOTE: During Golden Hour (active/activeSecondary/activeLastMin), 
-    /// the countdown is CONTINUOUS to the end time, not phase-specific.
-    /// Only before_start has a different target (counts to Golden Hour start).
-    func getCountdownTarget() -> Double? {
-        let currentPhase = getCurrentPhase()
-        let now = Date().timeIntervalSince1970 * 1000 // Convert to milliseconds
-        
-        print("[LiveActivity] 🎯 Getting countdown target for phase: \(currentPhase.rawValue)")
-        
-        switch currentPhase {
-        case .beforeStart:
-            // Count down to when Golden Hour starts
-            // Safety check: if activeTime is in the past or equal to now, return nil
-            guard let active = activeTime, active > now else {
-                print("[LiveActivity] ⚠️ beforeStart: activeTime is in past or nil, returning nil")
-                return nil
-            }
-            let secondsRemaining = (active - now) / 1000
-            print("[LiveActivity] ✅ beforeStart: Counting to active in \(secondsRemaining)s (target: \(active))")
-            return active
-        case .active, .activeSecondary, .activeLastMin:
-            // ALL Golden Hour phases count to the SAME end time
-            // This creates one continuous countdown throughout Golden Hour
-            // Safety check: if endedTime is in the past or equal to now, return nil
-            guard let ended = endedTime, ended > now else {
-                print("[LiveActivity] ⚠️ \(currentPhase.rawValue): endedTime is in past or nil, returning nil")
-                return nil
-            }
-            let secondsRemaining = (ended - now) / 1000
-            print("[LiveActivity] ✅ \(currentPhase.rawValue): Counting to ended in \(secondsRemaining)s (target: \(ended))")
-            return ended
-        case .ended, .dismiss:
-            print("[LiveActivity] ⚠️ \(currentPhase.rawValue): No countdown needed")
-            return nil // No countdown when ended
-        }
-    }
+    /// Get countdown target for current phase (duplicate function removed)
 }

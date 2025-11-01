@@ -1,31 +1,26 @@
 import SwiftUI
 import WidgetKit
 
-// MARK: - Custom Timeline Schedule for Phase Transitions
-
-struct PhaseTransitionSchedule: TimelineSchedule {
-  let dates: [Date]
-  
-  func entries(from startDate: Date, mode: TimelineScheduleMode) -> AnyIterator<Date> {
-    var index = 0
-    let futureDates = dates.filter { $0 >= startDate }.sorted()
-    
-    return AnyIterator {
-      guard index < futureDates.count else { return nil }
-      let date = futureDates[index]
-      index += 1
-      return date
-    }
-  }
-}
-
 #if canImport(ActivityKit)
 
   // MARK: - Golden Hour Phase Helpers
   
   extension LiveActivityAttributes.ContentState {
     var showGoldenHourView: Bool {
-      return self.phase != nil && self.endedTime != nil
+      let result = self.phase != nil && self.endedTime != nil
+      print("[LiveActivity] showGoldenHourView: \(result)")
+      print("[LiveActivity] phase: \(phase ?? "nil")")
+      print("[LiveActivity] endedTime: \(endedTime ?? 0)")
+      print("[LiveActivity] beforeStartTime: \(beforeStartTime ?? 0)")
+      print("[LiveActivity] activeTime: \(activeTime ?? 0)")
+      return result
+    }
+    
+    // Helper method to check if we have all required timestamps for Apple's timer pattern
+    func hasValidTimestamps() -> Bool {
+      return beforeStartTime != nil && activeTime != nil && 
+             activeSecondaryTime != nil && activeLastMinTime != nil && 
+             endedTime != nil
     }
   }
 
@@ -81,87 +76,115 @@ struct PhaseTransitionSchedule: TimelineSchedule {
       .frame(maxHeight: .infinity, alignment: imageAlignment)
     }
     
-    // MARK: - Golden Hour Countdown View
+    @ViewBuilder
+    private func resizableImage(imageName: String, height: CGFloat? = nil, width: CGFloat? = nil) -> some View {
+      if let uiImage = UIImage(named: imageName) {
+        Image(uiImage: uiImage)
+          .resizable()
+          .aspectRatio(contentMode: .fit)
+          .frame(width: width, height: height)
+      } else {
+        Rectangle()
+          .fill(Color.gray.opacity(0.3))
+          .frame(width: width ?? 50, height: height ?? 50)
+          .overlay(
+            Text("No Image")
+              .font(.caption)
+              .foregroundColor(.gray)
+          )
+      }
+    }
+    
+  // MARK: - Golden Hour Countdown View (Updated to Apple's Pattern)
   
   @ViewBuilder
   private func goldenHourContent() -> some View {
-    let schedule = createPhaseSchedule()
-    
-    TimelineView(schedule) { _ in
-      VStack(spacing: 16) {
-        // Title recalculated at each phase transition
-        Text(contentState.phaseMessage)
-          .font(.headline)
-          .multilineTextAlignment(.center)
-          .foregroundColor(Color.black.opacity(0.85))
-
-        // Native iOS countdown timer
-        if let countdownTarget = contentState.getCountdownTarget() {
-          Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget), countsDown: true)
-            .font(.custom("Gunterz-Bold", size: 48))
-            .monospacedDigit()
-            .foregroundColor(Color.black.opacity(0.9))
-            .multilineTextAlignment(.center)
+    VStack(spacing: 16) {
+      // Top Row: Current phase with live updates
+      HStack {
+        // Phase icon and name - auto-calculated
+        VStack(alignment: .leading, spacing: 4) {
+          Text(contentState.phaseIcon())
+            .font(.title)
+          Text(contentState.getCurrentPhase(at: Date()).rawValue.capitalized)
+            .font(.headline)
+            .fontWeight(.bold)
+            .foregroundColor(Color(hex: contentState.phaseColorHex()))
         }
-
-        // Subtitle from React Native (optional)
-        if let subtitle = contentState.subtitle {
-          Text(subtitle)
-            .font(.subheadline)
-            .multilineTextAlignment(.center)
-            .foregroundColor(Color.black.opacity(0.7))
+        
+        Spacer()
+        
+        // Native iOS countdown timer - Apple's pattern!
+        VStack(alignment: .trailing, spacing: 4) {
+          if let timerRange = contentState.getTimerRange(at: Date()) {
+            Text(timerInterval: timerRange, countsDown: true)
+              .font(.custom("Manrope-Bold", size: 24))
+              .monospacedDigit()
+              .foregroundColor(.white)
+          } else {
+            Text("Complete")
+              .font(.custom("Manrope-Bold", size: 24))
+              .foregroundColor(.gray)
+          }
+          Text("Remaining")
+            .font(.caption)
+            .foregroundColor(.white.opacity(0.7))
         }
       }
-      .padding()
-      .frame(maxWidth: .infinity)
-      .background(
-        // Background color recalculated at each phase transition
-        Color(hex: contentState.phaseColorHex)
+      
+      // Progress Bar using Apple's pattern
+      if let timerRange = contentState.getTimerRange(at: Date()) {
+        ProgressView(timerInterval: timerRange)
+          .progressViewStyle(LinearProgressViewStyle(tint: Color(hex: contentState.phaseColorHex())))
+          .scaleEffect(y: 2)
+      }
+      
+      // Bottom Row: Phase details
+      HStack {
+        Text("Golden Hour Phase")
+          .font(.caption)
+          .foregroundColor(.white.opacity(0.7))
+        
+        Spacer()
+        
+        Text(contentState.phaseMessage())
+          .font(.caption)
+          .foregroundColor(.white.opacity(0.7))
+      }
+      
+      // DEBUG INFO (Remove this section when working)
+      VStack(alignment: .leading, spacing: 2) {
+        Text("🔍 DEBUG INFO - APPLE TIMER PATTERN")
+          .font(.caption2)
+          .foregroundColor(.yellow)
+        Text("CURRENT: \(Int(Date().timeIntervalSince1970 * 1000))")
+          .font(.caption2)
+          .foregroundColor(.yellow)
+        if let target = contentState.getCountdownTarget(at: Date()) {
+          Text("TARGET: \(Int(target))")
+            .font(.caption2)
+            .foregroundColor(.yellow)
+          Text("DIFF: \(Int(target - Date().timeIntervalSince1970 * 1000))")
+            .font(.caption2)
+            .foregroundColor(.yellow)
+        }
+        Text("PHASE: \(contentState.getCurrentPhase(at: Date()).rawValue)")
+          .font(.caption2)
+          .foregroundColor(.yellow)
+      }
+    }
+    .padding(16)
+    .background(
+      LinearGradient(
+        gradient: Gradient(colors: [
+          Color(hex: contentState.phaseColorHex()).opacity(0.3),
+          Color.black.opacity(0.8)
+        ]),
+        startPoint: .top,
+        endPoint: .bottom
       )
-    }
-  }
-  
-  // Helper to create timeline schedule with phase transition dates
-  private func createPhaseSchedule() -> PhaseTransitionSchedule {
-    var dates: [Date] = [Date.now]
-    
-    // Add timeline entries at exact phase transition moments AND 2 seconds after
-    // This ensures immediate phase recalculation when countdown hits zero
-    if let active = contentState.activeTime {
-      let activeDate = Date(timeIntervalSince1970: active / 1000)
-      if activeDate > Date.now {
-        dates.append(activeDate) // Exact transition moment
-        dates.append(activeDate.addingTimeInterval(2)) // 2s after for phase recalculation
-      }
-    }
-    
-    if let activeSecondary = contentState.activeSecondaryTime {
-      let activeSecondaryDate = Date(timeIntervalSince1970: activeSecondary / 1000)
-      if activeSecondaryDate > Date.now {
-        dates.append(activeSecondaryDate)
-        dates.append(activeSecondaryDate.addingTimeInterval(2))
-      }
-    }
-    
-    if let activeLastMin = contentState.activeLastMinTime {
-      let activeLastMinDate = Date(timeIntervalSince1970: activeLastMin / 1000)
-      if activeLastMinDate > Date.now {
-        dates.append(activeLastMinDate)
-        dates.append(activeLastMinDate.addingTimeInterval(2))
-      }
-    }
-    
-    if let ended = contentState.endedTime {
-      let endedDate = Date(timeIntervalSince1970: ended / 1000)
-      if endedDate > Date.now {
-        dates.append(endedDate)
-        dates.append(endedDate.addingTimeInterval(2))
-      }
-    }
-    
-    return PhaseTransitionSchedule(dates: dates)
-  }
-  
+    )
+  }  
   var body: some View {
     // If Golden Hour phase is active, show custom countdown view
     if contentState.showGoldenHourView {

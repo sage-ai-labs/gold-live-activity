@@ -7,24 +7,8 @@ import WidgetKit
 // The actual phase calculation happens in GoldenHourPhaseCalculator.swift
 
 extension LiveActivityAttributes.ContentState {
-  var phaseColor: Color {
-    return Color(hex: getPhaseColorHex())
-  }
-  
-  var phaseIcon: String {
-    return getPhaseIcon()
-  }
-  
-  var phaseColorHex: String {
-    return getPhaseColorHex()
-  }
-  
-  var phaseMessage: String {
-    return getPhaseMessage()
-  }
-  
-  var compactMessage: String {
-    return getCompactMessage()
+  func phaseColor(at currentTime: Date = Date()) -> Color {
+    return Color(hex: phaseColorHex(at: currentTime))
   }
   
   var isGoldenHour: Bool {
@@ -86,37 +70,23 @@ struct LiveActivityWidget: Widget {
         }
       } compactLeading: {
         if context.state.isGoldenHour {
-          // Golden Hour: Show phase icon with updates at phase transitions
-          let schedule = createPhaseSchedule(state: context.state)
-          TimelineView(schedule) { _ in
-            Text(context.state.phaseIcon)
-              .font(.system(size: 18))
-              .applyWidgetURL(from: context.attributes.deepLinkUrl)
-          }
+          // Golden Hour: Show phase icon (no TimelineView needed for static icon)
+          Text(context.state.phaseIcon(at: Date()))
+            .font(.system(size: 18))
+            .applyWidgetURL(from: context.attributes.deepLinkUrl)
         } else if let dynamicIslandImageName = context.state.dynamicIslandImageName {
           resizableImage(imageName: dynamicIslandImageName)
             .frame(maxWidth: 23, maxHeight: 23)
             .applyWidgetURL(from: context.attributes.deepLinkUrl)
         }
       } compactTrailing: {
-        if context.state.isGoldenHour {
-          // Golden Hour: Show digital countdown with phase transition updates
-          let schedule = createPhaseSchedule(state: context.state)
-          TimelineView(schedule) { _ in
-            if let countdownTarget = context.state.getCountdownTarget() {
-              Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget))
-                .font(.system(size: 14))
-                .fontWeight(.semibold)
-                .foregroundColor(context.state.phaseColor)
-                .applyWidgetURL(from: context.attributes.deepLinkUrl)
-            } else {
-              Text("--:--")
-                .font(.system(size: 14))
-                .fontWeight(.semibold)
-                .foregroundColor(context.state.phaseColor)
-                .applyWidgetURL(from: context.attributes.deepLinkUrl)
-            }
-          }
+        if context.state.isGoldenHour, let timerRange = context.state.getTimerRange(at: Date()) {
+          // Golden Hour: Native iOS countdown timer - Apple's Food Truck pattern
+          Text(timerInterval: timerRange, countsDown: true)
+            .font(.system(size: 14))
+            .fontWeight(.semibold)
+            .foregroundColor(context.state.phaseColor(at: Date()))
+            .applyWidgetURL(from: context.attributes.deepLinkUrl)
         } else if let date = context.state.timerEndDateInMilliseconds {
           compactTimer(
             endDate: date,
@@ -127,12 +97,9 @@ struct LiveActivityWidget: Widget {
       } minimal: {
         if context.state.isGoldenHour {
           // Golden Hour: Show phase icon in minimal state
-          let schedule = createPhaseSchedule(state: context.state)
-          TimelineView(schedule) { _ in
-            Text(context.state.phaseIcon)
-              .font(.system(size: 16))
-              .applyWidgetURL(from: context.attributes.deepLinkUrl)
-          }
+          Text(context.state.phaseIcon(at: Date()))
+            .font(.system(size: 16))
+            .applyWidgetURL(from: context.attributes.deepLinkUrl)
         } else if let date = context.state.timerEndDateInMilliseconds {
           compactTimer(
             endDate: date,
@@ -144,110 +111,56 @@ struct LiveActivityWidget: Widget {
     }
   }
   
-  // Note: contentStaleDate is not available in the current ActivityKit version
-  // Manual dismissal will be handled by React Native after 5 minutes of ended phase
-  
   // MARK: - Golden Hour Expanded Views
   
   private func goldenHourExpandedLeading(state: LiveActivityAttributes.ContentState) -> some View {
-    let schedule = createPhaseSchedule(state: state)
-    
-    return TimelineView(schedule) { _ in
-      VStack(alignment: .leading, spacing: 4) {
-        Spacer()
-        HStack(spacing: 6) {
-          Text(state.phaseIcon)
-            .font(.title2)
-          Text(state.compactMessage)
-            .font(.title3)
-            .fontWeight(.bold)
-            .foregroundStyle(state.phaseColor)
-        }
-        Text("Golden Hour")
-          .font(.caption)
-          .foregroundStyle(.white.opacity(0.7))
-        Spacer()
+    VStack(alignment: .leading, spacing: 4) {
+      Spacer()
+      HStack(spacing: 6) {
+        Text(state.phaseIcon(at: Date()))
+          .font(.title2)
+        Text(state.compactMessage(at: Date()))
+          .font(.title3)
+          .fontWeight(.bold)
+          .foregroundStyle(state.phaseColor(at: Date()))
       }
+      Text("Golden Hour")
+        .font(.caption)
+        .foregroundStyle(.white.opacity(0.7))
+      Spacer()
     }
   }
   
   private func goldenHourExpandedTrailing(state: LiveActivityAttributes.ContentState) -> some View {
-    let schedule = createPhaseSchedule(state: state)
-    
-    return TimelineView(schedule) { _ in
-      VStack(spacing: 4) {
-        Spacer()
-        Text(state.phaseIcon)
-          .font(.system(size: 40))
-        Text("Ends at 7PM PT")
-          .font(.caption2)
-          .foregroundStyle(.white.opacity(0.6))
-        Spacer()
-      }
+    VStack(spacing: 4) {
+      Spacer()
+      Text(state.phaseIcon(at: Date()))
+        .font(.system(size: 40))
+      Text("Ends at 7PM PT")
+        .font(.caption2)
+        .foregroundStyle(.white.opacity(0.6))
+      Spacer()
     }
   }
   
   private func goldenHourExpandedBottom(state: LiveActivityAttributes.ContentState) -> some View {
-    let schedule = createPhaseSchedule(state: state)
-    
-    return TimelineView(schedule) { _ in
-      VStack(spacing: 8) {
-        Text("Time Remaining")
-          .font(.caption)
-          .foregroundStyle(.white.opacity(0.7))
-        
-        // Native iOS countdown timer
-        if let countdownTarget = state.getCountdownTarget() {
-          Text(timerInterval: Date.toTimerInterval(miliseconds: countdownTarget), countsDown: true)
-            .font(.custom("Manrope-Bold", size: 32))
-            .monospacedDigit()
-            .foregroundColor(.white)
-            .frame(height: 40)
-        }
-      }
-      .padding(.top, 8)
-    }
-  }
-  
-  // Helper to create timeline schedule with phase transition dates
-  private func createPhaseSchedule(state: LiveActivityAttributes.ContentState) -> PhaseTransitionSchedule {
-    var dates: [Date] = [Date.now]
-    
-    // Add timeline entries at exact phase transition moments AND 2 seconds after
-    // This ensures immediate phase recalculation when countdown hits zero
-    if let active = state.activeTime {
-      let activeDate = Date(timeIntervalSince1970: active / 1000)
-      if activeDate > Date.now {
-        dates.append(activeDate) // Exact transition moment
-        dates.append(activeDate.addingTimeInterval(2)) // 2s after for phase recalculation
+    VStack(spacing: 8) {
+      Text("Time Remaining")
+        .font(.caption)
+        .foregroundStyle(.white.opacity(0.7))
+      
+      // Native iOS countdown timer with PHASE-SPECIFIC target
+      // Uses Apple's Food Truck pattern: Text(timerInterval: timerRange, countsDown: true)
+      // Uses Manrope-Bold font to match the app's ClockCountdown style
+      if let timerRange = state.getTimerRange(at: Date()) {
+        Text(timerInterval: timerRange, countsDown: true)
+          .font(.custom("Manrope-Bold", size: 32))
+          .monospacedDigit()
+          .foregroundColor(.white)
+          .frame(height: 40)
       }
     }
-    
-    if let activeSecondary = state.activeSecondaryTime {
-      let activeSecondaryDate = Date(timeIntervalSince1970: activeSecondary / 1000)
-      if activeSecondaryDate > Date.now {
-        dates.append(activeSecondaryDate)
-        dates.append(activeSecondaryDate.addingTimeInterval(2))
-      }
-    }
-    
-    if let activeLastMin = state.activeLastMinTime {
-      let activeLastMinDate = Date(timeIntervalSince1970: activeLastMin / 1000)
-      if activeLastMinDate > Date.now {
-        dates.append(activeLastMinDate)
-        dates.append(activeLastMinDate.addingTimeInterval(2))
-      }
-    }
-    
-    if let ended = state.endedTime {
-      let endedDate = Date(timeIntervalSince1970: ended / 1000)
-      if endedDate > Date.now {
-        dates.append(endedDate)
-        dates.append(endedDate.addingTimeInterval(2))
-      }
-    }
-    
-    return PhaseTransitionSchedule(dates: dates)
+    .padding(.top, 8)
   }
   
   // MARK: - Default Views (Original expo-live-activity)
@@ -314,5 +227,24 @@ struct LiveActivityWidget: Widget {
       }
     )
     .progressViewStyle(.circular)
+  }
+  
+  // MARK: - Helper Functions
+  
+  @ViewBuilder
+  private func resizableImage(imageName: String) -> some View {
+    if let uiImage = UIImage(named: imageName) {
+      Image(uiImage: uiImage)
+        .resizable()
+        .aspectRatio(contentMode: .fit)
+    } else {
+      Rectangle()
+        .fill(Color.gray.opacity(0.3))
+        .overlay(
+          Text("No Image")
+            .font(.caption2)
+            .foregroundColor(.gray)
+        )
+    }
   }
 }
