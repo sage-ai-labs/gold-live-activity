@@ -1,25 +1,25 @@
 import SwiftUI
 import WidgetKit
 
-#if canImport(ActivityKit)
+// MARK: - Custom Timeline Schedule for Phase Transitions
 
-  // MARK: - Custom Timeline Schedule for Phase Transitions
-
-  struct PhaseTransitionSchedule: TimelineSchedule {
-    let dates: [Date]
+struct PhaseTransitionSchedule: TimelineSchedule {
+  let dates: [Date]
+  
+  func entries(from startDate: Date, mode: TimelineScheduleMode) -> AnyIterator<Date> {
+    var index = 0
+    let futureDates = dates.filter { $0 >= startDate }.sorted()
     
-    func entries(from startDate: Date, mode: TimelineScheduleMode) -> AnyIterator<Date> {
-      var index = 0
-      let futureDates = dates.filter { $0 >= startDate }.sorted()
-      
-      return AnyIterator {
-        guard index < futureDates.count else { return nil }
-        let date = futureDates[index]
-        index += 1
-        return date
-      }
+    return AnyIterator {
+      guard index < futureDates.count else { return nil }
+      let date = futureDates[index]
+      index += 1
+      return date
     }
   }
+}
+
+#if canImport(ActivityKit)
 
   // MARK: - Golden Hour Phase Helpers
   
@@ -125,11 +125,13 @@ import WidgetKit
   private func createPhaseSchedule() -> PhaseTransitionSchedule {
     var dates: [Date] = [Date.now]
     
-    // Add date for each phase transition
+    // Add timeline entries at exact phase transition moments AND 2 seconds after
+    // This ensures immediate phase recalculation when countdown hits zero
     if let active = contentState.activeTime {
       let activeDate = Date(timeIntervalSince1970: active / 1000)
       if activeDate > Date.now {
-        dates.append(activeDate)
+        dates.append(activeDate) // Exact transition moment
+        dates.append(activeDate.addingTimeInterval(2)) // 2s after for phase recalculation
       }
     }
     
@@ -137,6 +139,7 @@ import WidgetKit
       let activeSecondaryDate = Date(timeIntervalSince1970: activeSecondary / 1000)
       if activeSecondaryDate > Date.now {
         dates.append(activeSecondaryDate)
+        dates.append(activeSecondaryDate.addingTimeInterval(2))
       }
     }
     
@@ -144,6 +147,7 @@ import WidgetKit
       let activeLastMinDate = Date(timeIntervalSince1970: activeLastMin / 1000)
       if activeLastMinDate > Date.now {
         dates.append(activeLastMinDate)
+        dates.append(activeLastMinDate.addingTimeInterval(2))
       }
     }
     
@@ -151,13 +155,13 @@ import WidgetKit
       let endedDate = Date(timeIntervalSince1970: ended / 1000)
       if endedDate > Date.now {
         dates.append(endedDate)
+        dates.append(endedDate.addingTimeInterval(2))
       }
     }
     
     return PhaseTransitionSchedule(dates: dates)
-  }    }
+  }
   
-  var body: some View {
   var body: some View {
     // If Golden Hour phase is active, show custom countdown view
     if contentState.showGoldenHourView {

@@ -2,24 +2,6 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
-// MARK: - Custom Timeline Schedule for Phase Transitions
-
-struct PhaseTransitionSchedule: TimelineSchedule {
-  let dates: [Date]
-  
-  func entries(from startDate: Date, mode: TimelineScheduleMode) -> AnyIterator<Date> {
-    var index = 0
-    let futureDates = dates.filter { $0 >= startDate }.sorted()
-    
-    return AnyIterator {
-      guard index < futureDates.count else { return nil }
-      let date = futureDates[index]
-      index += 1
-      return date
-    }
-  }
-}
-
 // MARK: - Golden Hour Phase Extensions
 // Note: These extensions are kept for backward compatibility
 // The actual phase calculation happens in GoldenHourPhaseCalculator.swift
@@ -170,7 +152,7 @@ struct LiveActivityWidget: Widget {
   private func goldenHourExpandedLeading(state: LiveActivityAttributes.ContentState) -> some View {
     let schedule = createPhaseSchedule(state: state)
     
-    TimelineView(schedule) { _ in
+    return TimelineView(schedule) { _ in
       VStack(alignment: .leading, spacing: 4) {
         Spacer()
         HStack(spacing: 6) {
@@ -192,7 +174,7 @@ struct LiveActivityWidget: Widget {
   private func goldenHourExpandedTrailing(state: LiveActivityAttributes.ContentState) -> some View {
     let schedule = createPhaseSchedule(state: state)
     
-    TimelineView(schedule) { _ in
+    return TimelineView(schedule) { _ in
       VStack(spacing: 4) {
         Spacer()
         Text(state.phaseIcon)
@@ -208,7 +190,7 @@ struct LiveActivityWidget: Widget {
   private func goldenHourExpandedBottom(state: LiveActivityAttributes.ContentState) -> some View {
     let schedule = createPhaseSchedule(state: state)
     
-    TimelineView(schedule) { _ in
+    return TimelineView(schedule) { _ in
       VStack(spacing: 8) {
         Text("Time Remaining")
           .font(.caption)
@@ -231,11 +213,13 @@ struct LiveActivityWidget: Widget {
   private func createPhaseSchedule(state: LiveActivityAttributes.ContentState) -> PhaseTransitionSchedule {
     var dates: [Date] = [Date.now]
     
-    // Add date for each phase transition
+    // Add timeline entries at exact phase transition moments AND 2 seconds after
+    // This ensures immediate phase recalculation when countdown hits zero
     if let active = state.activeTime {
       let activeDate = Date(timeIntervalSince1970: active / 1000)
       if activeDate > Date.now {
-        dates.append(activeDate)
+        dates.append(activeDate) // Exact transition moment
+        dates.append(activeDate.addingTimeInterval(2)) // 2s after for phase recalculation
       }
     }
     
@@ -243,6 +227,7 @@ struct LiveActivityWidget: Widget {
       let activeSecondaryDate = Date(timeIntervalSince1970: activeSecondary / 1000)
       if activeSecondaryDate > Date.now {
         dates.append(activeSecondaryDate)
+        dates.append(activeSecondaryDate.addingTimeInterval(2))
       }
     }
     
@@ -250,6 +235,7 @@ struct LiveActivityWidget: Widget {
       let activeLastMinDate = Date(timeIntervalSince1970: activeLastMin / 1000)
       if activeLastMinDate > Date.now {
         dates.append(activeLastMinDate)
+        dates.append(activeLastMinDate.addingTimeInterval(2))
       }
     }
     
@@ -257,6 +243,7 @@ struct LiveActivityWidget: Widget {
       let endedDate = Date(timeIntervalSince1970: ended / 1000)
       if endedDate > Date.now {
         dates.append(endedDate)
+        dates.append(endedDate.addingTimeInterval(2))
       }
     }
     
