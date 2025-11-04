@@ -1,59 +1,31 @@
 import ActivityKit
 import Foundation
+import OneSignalLiveActivities
 
-struct LiveActivityAttributes: ActivityAttributes {
-    struct ContentState: Codable, Hashable {
-        // Standard expo-live-activity fields
-        var title: String
-        var subtitle: String?
-        var timerEndDateInMilliseconds: Double?
-        var progress: Double?
-        var imageName: String?
-        var dynamicIslandImageName: String?
+// MARK: - Golden Hour Live Activity Attributes (OneSignal Compatible)
+struct GoldenHourLiveActivityAttributes: ActivityAttributes, OneSignalLiveActivityAttributes {
+    public struct ContentState: OneSignalLiveActivityContentState {
+        // Dynamic stateful properties about your activity go here!
+        var phase: String                    // "golden_hour", "final_minutes", etc.
+        var timeRemaining: TimeInterval      // Seconds remaining
+        var currentBid: Double               // Current highest bid
+        var dealTitle: String                // Title of the deal
+        var message: String                  // Status message
+        var backgroundColor: String?         // Hex color for background
+        var progressValue: Double?           // Progress percentage (0.0 - 1.0)
         
-        // Simplified Golden Hour fields (matching backend LiveActivityData interface)
-        var message: String?
-        var backgroundColor: String?
-        var textColor: String?
-        var messageOpened: String?
-        
-        // Golden Hour timing (simplified to single phase)
-        var goldenHourEndTime: Double? // End time in milliseconds (1 hour + 5 min auto-dismiss)
-        
-        // App state tracking for message switching
-        var appOpened: Bool?
+        // OneSignal required property for ContentState
+        var onesignal: OneSignalLiveActivityContentStateData?
     }
 
-    var name: String
-    var backgroundColor: String?
-    var titleColor: String?
-    var subtitleColor: String?
-    var progressViewTint: String?
-    var progressViewLabelColor: String?
-    var deepLinkUrl: String?
-    var timerType: TimerType?
-    var padding: Int?
-    var paddingDetails: PaddingDetails?
-    var imagePosition: String?
-    var imageWidth: Int?
-    var imageHeight: Int?
-    var imageWidthPercent: Double?
-    var imageHeightPercent: Double?
-    var imageAlign: String?
-    var contentFit: String?
-
-    enum TimerType: String, Codable {
-        case circular
-        case linear
-        case timer
-    }
-
-    struct PaddingDetails: Codable, Hashable {
-        var top: Int?
-        var bottom: Int?
-        var left: Int?
-        var right: Int?
-        var vertical: Int?
-        var horizontal: Int?
-    }
+    // Fixed non-changing properties about your activity go here!
+    var activityId: String                   // Unique identifier for this activity
+    var dealId: String                       // Deal identifier
+    var userId: String                       // User who triggered the activity
+    
+    // OneSignal required property for main attributes
+    var onesignal: OneSignalLiveActivityAttributeData
 }
+
+// Keep the old typealias for backward compatibility during transition
+typealias LiveActivityAttributes = GoldenHourLiveActivityAttributes
