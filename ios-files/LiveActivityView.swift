@@ -13,7 +13,7 @@ struct LiveActivityView: View {
       if let shouldShow = context.state.data["shouldShow"]?.asBool(), !shouldShow {
         EmptyView()
       } else {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
           // Title from OneSignal state with emoji support
           HStack(spacing: 4) {
             if let titleEmoji = context.state.data["titleEmoji"]?.asDict()?["en"]?.asString() {
@@ -26,16 +26,47 @@ struct LiveActivityView: View {
               .foregroundColor(Color.black.opacity(0.85))
           }
 
-          // Golden Hour countdown timer
-          if let timerEndDate = context.state.data["timerEndDate"]?.asDouble() {
-            Text(timerInterval: Date(timeIntervalSince1970: timerEndDate / 1000)...Date(timeIntervalSince1970: timerEndDate / 1000), countsDown: true)
+          // Golden Hour countdown timer (no spacing from title)
+          if let countdownSeconds = context.state.data["countdownSeconds"]?.asDouble() {
+            let endDate = Date().addingTimeInterval(countdownSeconds)
+            Text(timerInterval: Date()...endDate, countsDown: true)
+              .font(.custom("Manrope-Bold", size: 48))
+              .monospacedDigit()
+              .foregroundColor(Color.black.opacity(0.9))
+              .multilineTextAlignment(.center)
+          } else if let countdownSecondsInt = context.state.data["countdownSeconds"]?.asInt() {
+            // Try parsing as Int in case it's sent as integer
+            let endDate = Date().addingTimeInterval(Double(countdownSecondsInt))
+            Text(timerInterval: Date()...endDate, countsDown: true)
+              .font(.custom("Manrope-Bold", size: 48))
+              .monospacedDigit()
+              .foregroundColor(Color.black.opacity(0.9))
+              .multilineTextAlignment(.center)
+          } else {
+            // Default 1-hour countdown if no countdownSeconds provided
+            let defaultEndTime = Date().addingTimeInterval(3600) // 1 hour from now
+            Text(timerInterval: Date()...defaultEndTime, countsDown: true)
               .font(.custom("Manrope-Bold", size: 48))
               .monospacedDigit()
               .foregroundColor(Color.black.opacity(0.9))
               .multilineTextAlignment(.center)
           }
 
-          // Subtitle from OneSignal state with emoji support
+          // Progress view for Golden Hour countdown (comes before subtitle)
+          if let progress = context.state.data["progressValue"]?.asDouble() {
+            ProgressView(value: progress)
+              .progressViewStyle(LinearProgressViewStyle(tint: .orange))
+              .scaleEffect(y: 2)
+              .padding(.top, 8)
+          } else {
+            // Default static progress bar at 50% if no progress provided
+            ProgressView(value: 0.5)
+              .progressViewStyle(LinearProgressViewStyle(tint: .orange))
+              .scaleEffect(y: 2)
+              .padding(.top, 8)
+          }
+
+          // Subtitle from OneSignal state with emoji support (comes after progress)
           HStack(spacing: 4) {
             if let subtitleEmoji = context.state.data["subtitleEmoji"]?.asDict()?["en"]?.asString() {
               Text(subtitleEmoji)
@@ -48,17 +79,7 @@ struct LiveActivityView: View {
                 .foregroundColor(Color.black.opacity(0.7))
             }
           }
-
-          // Progress view for Golden Hour countdown
-          if let timerEndDate = context.state.data["timerEndDate"]?.asDouble() {
-            ProgressView(timerInterval: Date(timeIntervalSince1970: timerEndDate / 1000)...Date(timeIntervalSince1970: timerEndDate / 1000))
-              .progressViewStyle(LinearProgressViewStyle(tint: .orange))
-              .scaleEffect(y: 2)
-          } else if let progress = context.state.data["progressValue"]?.asDouble() {
-            ProgressView(value: progress)
-              .progressViewStyle(LinearProgressViewStyle(tint: .orange))
-              .scaleEffect(y: 2)
-          }
+          .padding(.top, 8)
         }
         .padding()
         .frame(maxWidth: .infinity)

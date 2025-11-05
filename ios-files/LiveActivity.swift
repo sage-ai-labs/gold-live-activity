@@ -11,69 +11,22 @@ struct LiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: DefaultLiveActivityAttributes.self) { context in
             // Lock screen / banner UI using OneSignal's DefaultLiveActivityAttributes
-            VStack {
-                Spacer()
-                
-                // Deal Title from static attributes
-                Text("Title: " + (context.attributes.data["title"]?.asString() ?? "Golden Hour"))
-                    .font(.headline)
-                    .multilineTextAlignment(.center)
-                
-                Spacer()
-                
-                // Status Message from dynamic state
-                HStack {
-                    Spacer()
-                    Text(context.state.data["message"]?.asDict()?["en"]?.asString() ?? "Golden Hour is active!")
-                        .font(.body)
-                        .multilineTextAlignment(.center)
-                    Spacer()
-                }
-                
-                // Golden Hour Phase
-                if let phase = context.state.data["phase"]?.asString() {
-                    Text("Phase: " + phase.replacingOccurrences(of: "_", with: " "))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                // Countdown Timer
-                if let timerEndDate = context.state.data["timerEndDate"]?.asDouble() {
-                    Text(timerInterval: Date(timeIntervalSince1970: timerEndDate / 1000)...Date(timeIntervalSince1970: timerEndDate / 1000), countsDown: true)
-                        .font(.system(.title2, design: .monospaced))
-                        .fontWeight(.bold)
-                }
-                
-                // Current Bid (from dynamic state)
-                Text("Current Bid: $" + String(context.state.data["currentBid"]?.asInt() ?? 0))
-                    .font(.caption)
-                
-                // Debug info for OneSignal data types
-                Text("INT: " + String(context.state.data["intValue"]?.asInt() ?? 0))
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                Text("DBL: " + String(context.state.data["doubleValue"]?.asDouble() ?? 0.0))
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                Text("BOL: " + String(context.state.data["boolValue"]?.asBool() ?? false))
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                
-                Spacer()
-            }
-            .activitySystemActionForegroundColor(.black)
-            .activityBackgroundTint(
-                Color.fromHex(context.attributes.data["backgroundColor"]?.asString())
-            )
+            LiveActivityView(context: context)
         } dynamicIsland: { context in
             DynamicIsland {
                 // Multiple expanded regions following OneSignal tutorial pattern
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading) {
-                        Text("🔥")
-                            .font(.title2)
-                            .foregroundColor(.orange)
-                        Text(context.attributes.data["title"]?.asString() ?? "Golden Hour")
+                        if let titleEmoji = context.state.data["titleEmoji"]?.asDict()?["en"]?.asString() {
+                            Text(titleEmoji)
+                                .font(.title2)
+                                .foregroundColor(.orange)
+                        } else {
+                            Text("🔥")
+                                .font(.title2)
+                                .foregroundColor(.orange)
+                        }
+                        Text(context.state.data["title"]?.asDict()?["en"]?.asString() ?? "Golden Hour")
                             .font(.headline)
                             .foregroundColor(.orange)
                     }
@@ -81,10 +34,20 @@ struct LiveActivity: Widget {
                 
                 DynamicIslandExpandedRegion(.trailing) {
                     VStack(alignment: .trailing) {
-                        Text("$" + String(context.state.data["currentBid"]?.asInt() ?? 0))
-                            .font(.title2.bold())
-                        if let timerEndDate = context.state.data["timerEndDate"]?.asDouble() {
-                            Text("ends soon")
+                        if let countdownSeconds = context.state.data["countdownSeconds"]?.asDouble() {
+                            let endDate = Date().addingTimeInterval(countdownSeconds)
+                            Text(timerInterval: Date()...endDate, countsDown: true)
+                                .font(.title2.bold())
+                                .monospacedDigit()
+                            Text("remaining")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else if let countdownSecondsInt = context.state.data["countdownSeconds"]?.asInt() {
+                            let endDate = Date().addingTimeInterval(Double(countdownSecondsInt))
+                            Text(timerInterval: Date()...endDate, countsDown: true)
+                                .font(.title2.bold())
+                                .monospacedDigit()
+                            Text("remaining")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -93,26 +56,48 @@ struct LiveActivity: Widget {
                 
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(spacing: 4) {
-                        Text(context.state.data["message"]?.asDict()?["en"]?.asString() ?? "Golden Hour is active!")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                        if let phase = context.state.data["phase"]?.asString() {
-                            Text("Phase: \(phase.replacingOccurrences(of: "_", with: " "))")
+                        if let subtitle = context.state.data["subtitle"]?.asDict()?["en"]?.asString() {
+                            Text(subtitle)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+                                .lineLimit(1)
                         }
                     }
                 }
             } compactLeading: {
-                Text("🔥")
-                    .foregroundColor(.orange)
+                if let titleEmoji = context.state.data["titleEmoji"]?.asDict()?["en"]?.asString() {
+                    Text(titleEmoji)
+                        .foregroundColor(.orange)
+                } else {
+                    Text("🔥")
+                        .foregroundColor(.orange)
+                }
             } compactTrailing: {
-                Text("$" + String(context.state.data["currentBid"]?.asInt() ?? 0))
-                    .font(.caption.bold())
+                if let countdownSeconds = context.state.data["countdownSeconds"]?.asDouble() {
+                    let endDate = Date().addingTimeInterval(countdownSeconds)
+                    Text(timerInterval: Date()...endDate, countsDown: true)
+                        .font(.caption.bold())
+                        .monospacedDigit()
+                        .foregroundColor(.orange)
+                } else if let countdownSecondsInt = context.state.data["countdownSeconds"]?.asInt() {
+                    let endDate = Date().addingTimeInterval(Double(countdownSecondsInt))
+                    Text(timerInterval: Date()...endDate, countsDown: true)
+                        .font(.caption.bold())
+                        .monospacedDigit()
+                        .foregroundColor(.orange)
+                } else {
+                    Text("Live")
+                        .font(.caption.bold())
+                        .foregroundColor(.orange)
+                }
             } minimal: {
-                Text("🔥")
-                    .foregroundColor(.orange)
+                if let titleEmoji = context.state.data["titleEmoji"]?.asDict()?["en"]?.asString() {
+                    Text(titleEmoji)
+                        .foregroundColor(.orange)
+                } else {
+                    Text("🔥")
+                        .foregroundColor(.orange)
+                }
             }
             .widgetURL(URL(string: "usegold://golden-hour"))
             .keylineTint(Color.orange)
