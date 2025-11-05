@@ -9,46 +9,105 @@ struct LiveActivityView: View {
     let context: ActivityViewContext<DefaultLiveActivityAttributes>
 
     var body: some View {
-      VStack(spacing: 16) {
-        // Title from OneSignal attributes
-        Text(context.attributes.data["title"]?.asString() ?? "Golden Hour")
-          .font(.headline)
-          .multilineTextAlignment(.center)
-          .foregroundColor(Color.black.opacity(0.85))
+      // Check if shouldShow is false, if so, don't render any UI
+      if let shouldShow = context.state.data["shouldShow"]?.asBool(), !shouldShow {
+        EmptyView()
+      } else {
+        VStack(spacing: 16) {
+          // Title from OneSignal state with emoji support
+          HStack(spacing: 4) {
+            if let titleEmoji = context.state.data["titleEmoji"]?.asDict()?["en"]?.asString() {
+              Text(titleEmoji)
+                .font(.headline)
+            }
+            Text(context.state.data["title"]?.asDict()?["en"]?.asString() ?? "Golden Hour")
+              .font(.headline)
+              .multilineTextAlignment(.center)
+              .foregroundColor(Color.black.opacity(0.85))
+          }
 
-        // Countdown timer from OneSignal state
-        if let timerEndDate = context.state.data["timerEndDate"]?.asDouble() {
-          Text(timerInterval: Date(timeIntervalSince1970: timerEndDate / 1000)...Date(timeIntervalSince1970: timerEndDate / 1000), countsDown: true)
-            .font(.custom("Gunterz-Bold", size: 48))
-            .monospacedDigit()
-            .foregroundColor(Color.black.opacity(0.9))
-            .multilineTextAlignment(.center)
+          // Golden Hour countdown timer
+          if let timerEndDate = context.state.data["timerEndDate"]?.asDouble() {
+            Text(timerInterval: Date(timeIntervalSince1970: timerEndDate / 1000)...Date(timeIntervalSince1970: timerEndDate / 1000), countsDown: true)
+              .font(.custom("Manrope-Bold", size: 48))
+              .monospacedDigit()
+              .foregroundColor(Color.black.opacity(0.9))
+              .multilineTextAlignment(.center)
+          }
+
+          // Subtitle from OneSignal state with emoji support
+          HStack(spacing: 4) {
+            if let subtitleEmoji = context.state.data["subtitleEmoji"]?.asDict()?["en"]?.asString() {
+              Text(subtitleEmoji)
+                .font(.subheadline)
+            }
+            if let subtitle = context.state.data["subtitle"]?.asDict()?["en"]?.asString() {
+              Text(subtitle)
+                .font(.subheadline)
+                .multilineTextAlignment(.center)
+                .foregroundColor(Color.black.opacity(0.7))
+            }
+          }
+
+          // Progress view for Golden Hour countdown
+          if let timerEndDate = context.state.data["timerEndDate"]?.asDouble() {
+            ProgressView(timerInterval: Date(timeIntervalSince1970: timerEndDate / 1000)...Date(timeIntervalSince1970: timerEndDate / 1000))
+              .progressViewStyle(LinearProgressViewStyle(tint: .orange))
+              .scaleEffect(y: 2)
+          } else if let progress = context.state.data["progressValue"]?.asDouble() {
+            ProgressView(value: progress)
+              .progressViewStyle(LinearProgressViewStyle(tint: .orange))
+              .scaleEffect(y: 2)
+          }
         }
-
-        // Message from OneSignal state
-        Text(context.state.data["message"]?.asDict()?["en"]?.asString() ?? "Golden Hour is active!")
-          .font(.subheadline)
-          .multilineTextAlignment(.center)
-          .foregroundColor(Color.black.opacity(0.7))
-
-        // Progress view
-        if let progress = context.state.data["progressValue"]?.asDouble() {
-          ProgressView(value: progress)
-            .progressViewStyle(LinearProgressViewStyle(tint: .orange))
-            .scaleEffect(y: 2)
-        } else if let timerEndDate = context.state.data["timerEndDate"]?.asDouble() {
-          ProgressView(timerInterval: Date(timeIntervalSince1970: timerEndDate / 1000)...Date(timeIntervalSince1970: timerEndDate / 1000))
-            .progressViewStyle(LinearProgressViewStyle(tint: .orange))
-            .scaleEffect(y: 2)
-        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(
+          // Use backgroundColor from OneSignal state, fallback to default golden color
+          Color.fromHex(context.state.data["backgroundColor"]?.asString() ?? "#F4FFB0")
+        )
+        .cornerRadius(16)
       }
-      .padding()
-      .frame(maxWidth: .infinity)
-      .background(
-        Color.fromHex(context.attributes.data["backgroundColor"]?.asString())
-      )
-      .cornerRadius(16)
     }
   }
+
+// MARK: - Color Extension
+extension Color {
+    static func fromHex(_ hexString: String?) -> Color {
+        guard let hex = hexString else { 
+            return Color(red: 1.0, green: 0.843, blue: 0.0) // Default gold
+        }
+        
+        var cString: String = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        
+        if cString.hasPrefix("#") {
+            cString.remove(at: cString.startIndex)
+        }
+        
+        if (cString.count) != 6, (cString.count) != 8 {
+            return Color(red: 1.0, green: 0.843, blue: 0.0) // Default gold
+        }
+        
+        var rgbValue: UInt64 = 0
+        Scanner(string: cString).scanHexInt64(&rgbValue)
+        
+        if cString.count == 6 {
+            return Color(
+                red: Double((rgbValue & 0xFF0000) >> 16) / 255.0,
+                green: Double((rgbValue & 0x00FF00) >> 8) / 255.0,
+                blue: Double(rgbValue & 0x0000FF) / 255.0
+            )
+        } else if cString.count == 8 {
+            return Color(
+                red: Double((rgbValue & 0xFF000000) >> 24) / 255.0,
+                green: Double((rgbValue & 0x00FF0000) >> 16) / 255.0,
+                blue: Double((rgbValue & 0x0000FF00) >> 8) / 255.0,
+                opacity: Double(rgbValue & 0x000000FF) / 255.0
+            )
+        }
+        
+        return Color(red: 1.0, green: 0.843, blue: 0.0) // Default gold
+    }
+}
 
 #endif
