@@ -42,8 +42,25 @@ struct LiveActivityView: View {
               .monospacedDigit()
               .foregroundColor(Color.black.opacity(0.9))
               .multilineTextAlignment(.center)
+          } else if let countdownSecondsString = context.state.data["countdownSeconds"]?.asString() {
+            // Try parsing as String in case OneSignal sends it as string in push updates
+            if let countdownValue = Double(countdownSecondsString) {
+              let endDate = Date().addingTimeInterval(countdownValue)
+              Text(timerInterval: Date()...endDate, countsDown: true)
+                .font(.custom("Manrope-Bold", size: 48))
+                .monospacedDigit()
+                .foregroundColor(Color.black.opacity(0.9))
+                .multilineTextAlignment(.center)
+            } else {
+              // Fallback with debug info
+              Text("1:00:00 (String: \(countdownSecondsString))")
+                .font(.custom("Manrope-Bold", size: 48))
+                .monospacedDigit()
+                .foregroundColor(Color.black.opacity(0.9))
+                .multilineTextAlignment(.center)
+            }
           } else {
-            // Default 1-hour countdown if no countdownSeconds provided
+            // Default 1-hour countdown if no countdownSeconds provided - show debug info
             let defaultEndTime = Date().addingTimeInterval(3600) // 1 hour from now
             Text(timerInterval: Date()...defaultEndTime, countsDown: true)
               .font(.custom("Manrope-Bold", size: 48))
@@ -52,19 +69,21 @@ struct LiveActivityView: View {
               .multilineTextAlignment(.center)
           }
 
-          // Progress view for Golden Hour countdown (comes before subtitle)
-          if let progress = context.state.data["progressValue"]?.asDouble() {
-            ProgressView(value: progress)
-              .progressViewStyle(LinearProgressViewStyle(tint: .orange))
-              .scaleEffect(y: 2)
-              .padding(.top, 8)
-          } else {
-            // Default static progress bar at 50% if no progress provided
-            ProgressView(value: 0.5)
-              .progressViewStyle(LinearProgressViewStyle(tint: .orange))
-              .scaleEffect(y: 2)
-              .padding(.top, 8)
-          }
+                    // Progress bar (comes before subtitle)
+          let progressValue: Double = {
+            if let progress = context.state.data["progressValue"]?.asDouble() {
+              return progress
+            } else if let countdownSeconds = context.state.data["countdownSeconds"]?.asDouble() {
+              // Calculate progress based on countdown (assuming 3600 seconds total)
+              return max(0.0, min(1.0, (3600.0 - countdownSeconds) / 3600.0))
+            } else if let countdownSecondsInt = context.state.data["countdownSeconds"]?.asInt() {
+              // Calculate progress based on countdown as Int
+              let countdown = Double(countdownSecondsInt)
+              return max(0.0, min(1.0, (3600.0 - countdown) / 3600.0))
+            } else {
+              return 0.0 // Default to 0% (start) if no data
+            }
+          }()
 
           // Subtitle from OneSignal state with emoji support (comes after progress)
           HStack(spacing: 4) {
