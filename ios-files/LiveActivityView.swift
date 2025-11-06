@@ -69,7 +69,7 @@ struct LiveActivityView: View {
               .multilineTextAlignment(.center)
           }
 
-                    // Progress bar (comes before subtitle)
+          // Progress bar (comes before subtitle)
           let progressValue: Double = {
             if let progress = context.state.data["progressValue"]?.asDouble() {
               return progress
@@ -80,10 +80,19 @@ struct LiveActivityView: View {
               // Calculate progress based on countdown as Int
               let countdown = Double(countdownSecondsInt)
               return max(0.0, min(1.0, (3600.0 - countdown) / 3600.0))
+            } else if let countdownSecondsString = context.state.data["countdownSeconds"]?.asString(),
+                      let countdownValue = Double(countdownSecondsString) {
+              // Calculate progress based on countdown as String
+              return max(0.0, min(1.0, (3600.0 - countdownValue) / 3600.0))
             } else {
-              return 0.0 // Default to 0% (start) if no data
+              // No countdownSeconds provided, using 1-hour default, so start at 100% (full time remaining)
+              return 1.0
             }
           }()
+          
+          ProgressView(value: progressValue)
+            .progressViewStyle(LinearProgressViewStyle(tint: Color.orange))
+            .scaleEffect(x: 1, y: 2, anchor: .center)
 
           // Subtitle from OneSignal state with emoji support (comes after progress)
           HStack(spacing: 4) {
