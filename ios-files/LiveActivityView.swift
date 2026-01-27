@@ -16,22 +16,24 @@ struct LiveActivityView: View {
             // New 70/30 Layout
             VStack(spacing: 0) {
                 // Top Section (70%) - App Icon, Title, Subtitle, Countdown
-                HStack(spacing: 8) {
+                HStack(spacing: 12) {
                     // Left: App Icon + Title + Subtitle (70%)
                     HStack(alignment: .center, spacing: 8) {
                         // App Icon
                         if let showAppIcon = context.state.data["showAppIcon"]?.asBool(), showAppIcon {
+                            let iconSize = context.state.data["iconSize"]?.asDouble() ?? 40.0
                             Image("GoldAppIcon", bundle: .main)
                                 .resizable()
-                                .frame(width: 40, height: 40)
+                                .frame(width: iconSize, height: iconSize)
                                 .clipShape(Circle())
                         }
                         
                         // Title & Subtitle
                         VStack(alignment: .leading, spacing: 2) {
                             // App Name
+                            let appNameSize = context.state.data["appNameSize"]?.asDouble() ?? 17.0
                             Text(context.state.data["appName"]?.asString() ?? "GOLD APP")
-                                .font(.system(size: 17, weight: .bold))
+                                .font(.system(size: appNameSize, weight: .bold))
                                 .foregroundColor(.black)
                             
                             // Subtitle
@@ -45,36 +47,37 @@ struct LiveActivityView: View {
                     
                     Spacer()
                     
-                    // Right: Countdown Label + Timer (30%)
+                    // Right: Countdown Section (30%)
                     VStack(alignment: .trailing, spacing: 2) {
                         // "ENDS IN" label
                         Text(context.state.data["countdownLabel"]?.asString() ?? "ENDS IN")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundColor(.black.opacity(0.6))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
                         
                         // Countdown Timer
-                        if let countdownSeconds = getCountdownSeconds() {
-                            let endDate = Date().addingTimeInterval(countdownSeconds)
-                            Text(timerInterval: Date()...endDate, countsDown: true)
-                                .font(.system(size: 28, weight: .bold))
-                                .monospacedDigit()
-                                .foregroundColor(.black)
-                        } else {
-                            Text("--:--")
-                                .font(.system(size: 28, weight: .bold))
-                                .monospacedDigit()
-                                .foregroundColor(.black)
+                        HStack(spacing: 4) {
+                            if let countdownSeconds = getCountdownSeconds() {
+                                let endDate = Date().addingTimeInterval(countdownSeconds)
+                                Text(timerInterval: Date()...endDate, countsDown: true)
+                                    .font(.system(size: 24, weight: .bold))
+                                    .monospacedDigit()
+                                    .foregroundColor(.black)
+                            } else {
+                                Text("--:--")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .monospacedDigit()
+                                    .foregroundColor(.black)
+                            }
                         }
                         
                         // Emoji below countdown
-                        if let showEmoji = context.state.data["showHourglassEmoji"]?.asBool(), showEmoji {
-                            let emojiChar = context.state.data["emojiCharacter"]?.asString() ?? "⏳"
+                        if let showHourglassEmoji = context.state.data["showHourglassEmoji"]?.asBool(), showHourglassEmoji {
+                            let emojiCharacter = context.state.data["emojiCharacter"]?.asString() ?? "⏳"
                             let emojiSize = context.state.data["emojiSize"]?.asDouble() ?? 20.0
-                            Text(emojiChar)
-                                .font(.system(size: CGFloat(emojiSize)))
+                            Text(emojiCharacter)
+                                .font(.system(size: emojiSize))
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 .frame(height: 112) // ~70% of 160pt total
                 .padding(.horizontal, 16)
@@ -101,31 +104,14 @@ struct LiveActivityView: View {
     // MARK: - Helper Views
     
     private var gradientBackground: some View {
-        // Use ZStack with overlapping rectangles for gradient-like effect
-        // Live Activities have limited gradient support, so we use layered colors
-        ZStack(alignment: .top) {
-            // Bottom color (full background)
-            Color.fromHex(context.state.data["backgroundColor2"]?.asString(), fallback: .white)
-            
-            // Top color with soft edge
-            VStack(spacing: 0) {
-                Color.fromHex(context.state.data["backgroundColor1"]?.asString(), fallback: Color(red: 0.89, green: 0.97, blue: 0.37))
-                    .frame(height: 100)
-                
-                // Gradient transition zone (very short)
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.fromHex(context.state.data["backgroundColor1"]?.asString(), fallback: Color(red: 0.89, green: 0.97, blue: 0.37)),
-                        Color.fromHex(context.state.data["backgroundColor2"]?.asString(), fallback: .white)
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 20)
-                
-                Spacer()
-            }
-        }
+        LinearGradient(
+            gradient: Gradient(colors: [
+                Color.fromHex(context.state.data["backgroundColor1"]?.asString(), fallback: Color(red: 0.89, green: 0.97, blue: 0.37)),
+                Color.fromHex(context.state.data["backgroundColor2"]?.asString(), fallback: .white)
+            ]),
+            startPoint: .top,
+            endPoint: .bottom
+        )
     }
     
     // MARK: - Helper Functions
