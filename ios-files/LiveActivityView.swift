@@ -21,25 +21,23 @@ struct LiveActivityView: View {
                     HStack(alignment: .center, spacing: 8) {
                         // App Icon
                         if let showAppIcon = context.state.data["showAppIcon"]?.asBool(), showAppIcon {
-                            let iconSize = context.state.data["iconSize"]?.asDouble() ?? 40.0
-                            Image("GoldAppIcon", bundle: .main)
+                            Image("AppIcon", bundle: .main)
                                 .resizable()
-                                .frame(width: iconSize, height: iconSize)
+                                .frame(width: context.state.data["iconSize"]?.asDouble() ?? 40.0, height: context.state.data["iconSize"]?.asDouble() ?? 40.0)
                                 .clipShape(Circle())
                         }
                         
                         // Title & Subtitle
                         VStack(alignment: .leading, spacing: 2) {
                             // App Name
-                            let appNameSize = context.state.data["appNameSize"]?.asDouble() ?? 17.0
                             Text(context.state.data["appName"]?.asString() ?? "GOLD APP")
-                                .font(.system(size: appNameSize, weight: .bold))
-                                .foregroundColor(.black)
+                                .font(.system(size: context.state.data["appNameSize"]?.asDouble() ?? 17.0, weight: .bold))
+                                .foregroundColor(Color.fromHex(context.state.data["appNameColor"]?.asString(), fallback: .black))
                             
                             // Subtitle
                             Text(context.state.data["subtitle"]?.asString() ?? "Your deals are expiring")
-                                .font(.system(size: 15))
-                                .foregroundColor(.secondary)
+                                .font(.system(size: context.state.data["subtitleSize"]?.asDouble() ?? 15.0))
+                                .foregroundColor(Color.fromHex(context.state.data["subtitleColor"]?.asString(), fallback: .secondary))
                                 .lineLimit(2)
                         }
                     }
@@ -48,34 +46,33 @@ struct LiveActivityView: View {
                     Spacer()
                     
                     // Right: Countdown Section (30%)
-                    VStack(alignment: .trailing, spacing: 2) {
-                        // "ENDS IN" label
-                        Text(context.state.data["countdownLabel"]?.asString() ?? "ENDS IN")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.secondary)
-                        
-                        // Countdown Timer
-                        HStack(spacing: 4) {
+                    HStack(alignment: .center, spacing: 6) {
+                        VStack(alignment: .center, spacing: 0) {
+                            // "ENDS IN" label
+                            Text(context.state.data["countdownLabel"]?.asString() ?? "ENDS IN")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Color.fromHex(context.state.data["countdownLabelColor"]?.asString(), fallback: .secondary))
+                            
+                            // Countdown Timer
                             if let countdownSeconds = getCountdownSeconds() {
                                 let endDate = Date().addingTimeInterval(countdownSeconds)
                                 Text(timerInterval: Date()...endDate, countsDown: true)
                                     .font(.system(size: 24, weight: .bold))
                                     .monospacedDigit()
-                                    .foregroundColor(.black)
+                                    .foregroundColor(Color.fromHex(context.state.data["countdownTimerColor"]?.asString(), fallback: .black))
                             } else {
                                 Text("--:--")
                                     .font(.system(size: 24, weight: .bold))
                                     .monospacedDigit()
-                                    .foregroundColor(.black)
+                                    .foregroundColor(Color.fromHex(context.state.data["countdownTimerColor"]?.asString(), fallback: .black))
                             }
                         }
                         
-                        // Emoji below countdown
+                        // Emoji on the side
                         if let showHourglassEmoji = context.state.data["showHourglassEmoji"]?.asBool(), showHourglassEmoji {
-                            let emojiCharacter = context.state.data["emojiCharacter"]?.asString() ?? "⏳"
-                            let emojiSize = context.state.data["emojiSize"]?.asDouble() ?? 20.0
-                            Text(emojiCharacter)
-                                .font(.system(size: emojiSize))
+                            Text(context.state.data["emojiCharacter"]?.asString() ?? "⏳")
+                                .font(.system(size: 60))
+                                .scaleEffect((context.state.data["emojiSize"]?.asDouble() ?? 20.0) / 60.0)
                         }
                     }
                 }
@@ -86,18 +83,19 @@ struct LiveActivityView: View {
                 // Button Section (30%) - Visual CTA
                 Text((context.state.data["buttonText"]?.asString() ?? "Claim your Deals") + " ↗")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.black)
+                    .foregroundColor(Color.fromHex(context.state.data["buttonTextColor"]?.asString(), fallback: .black))
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
                     .background(Color.fromHex(context.state.data["buttonColor"]?.asString(), fallback: Color(red: 0.89, green: 0.97, blue: 0.37)))
-                    .cornerRadius(12)
+                    .cornerRadius(context.state.data["buttonBorderRadius"]?.asDouble() ?? 12.0)
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
+                    .padding(.bottom, context.state.data["buttonBottomPadding"]?.asDouble() ?? 16.0)
             }
             .frame(height: 160) // Fixed height for V1
             .background(gradientBackground)
             .cornerRadius(16)
             .widgetURL(URL(string: context.state.data["deepLinkUrl"]?.asString() ?? "gold-app://golden-hour"))
+            .id("\(context.state.data["appNameSize"]?.asDouble() ?? 17.0)-\(context.state.data["emojiSize"]?.asDouble() ?? 20.0)-\(context.state.data["buttonBorderRadius"]?.asDouble() ?? 12.0)")
         }
     }
     

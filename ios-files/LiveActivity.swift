@@ -13,15 +13,9 @@ struct LiveActivity: Widget {
             // Lock screen / banner UI using OneSignal's DefaultLiveActivityAttributes
             LiveActivityView(context: context)
         } dynamicIsland: { context in
+            // Empty Dynamic Island for V1 - focus on lock screen UI
             DynamicIsland {
-                // Empty - Deferred to V1
-                DynamicIslandExpandedRegion(.leading) {
-                    EmptyView()
-                }
-                DynamicIslandExpandedRegion(.trailing) {
-                    EmptyView()
-                }
-                DynamicIslandExpandedRegion(.bottom) {
+                DynamicIslandExpandedRegion(.center) {
                     EmptyView()
                 }
             } compactLeading: {
@@ -32,7 +26,6 @@ struct LiveActivity: Widget {
                 EmptyView()
             }
             .widgetURL(URL(string: "gold-app://golden-hour"))
-            .keylineTint(Color.orange)
         }
     }
 }
