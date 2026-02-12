@@ -95,7 +95,7 @@ struct LiveActivityView: View {
             .background(gradientBackground)
             .cornerRadius(16)
             .widgetURL(URL(string: context.state.data["deepLinkUrl"]?.asString() ?? "gold-app://golden-hour"))
-            .id("\(context.state.data["appNameSize"]?.asDouble() ?? 17.0)-\(context.state.data["emojiSize"]?.asDouble() ?? 20.0)-\(context.state.data["buttonBorderRadius"]?.asDouble() ?? 12.0)")
+            .id("\(context.state.data["appNameSize"]?.asDouble() ?? 17.0)-\(context.state.data["subtitleSize"]?.asDouble() ?? 15.0)-\(context.state.data["emojiSize"]?.asDouble() ?? 20.0)-\(context.state.data["iconSize"]?.asDouble() ?? 40.0)-\(context.state.data["buttonBorderRadius"]?.asDouble() ?? 12.0)")
         }
     }
     
