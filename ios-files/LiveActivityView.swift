@@ -184,44 +184,5 @@ struct LiveActivityView: View {
     }
 }
 
-// MARK: - Color Extension (Backward Compatibility)
-extension Color {
-    static func fromHex(_ hexString: String?, fallback: Color = Color(red: 1.0, green: 0.843, blue: 0.0)) -> Color {
-        guard let hex = hexString else { 
-            return fallback
-        }
-        
-        var cString: String = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        
-        if cString.hasPrefix("#") {
-            cString.remove(at: cString.startIndex)
-        }
-        
-        if (cString.count) != 6, (cString.count) != 8 {
-            return fallback
-        }
-        
-        var rgbValue: UInt64 = 0
-        Scanner(string: cString).scanHexInt64(&rgbValue)
-        
-        if cString.count == 6 {
-            return Color(
-                red: Double((rgbValue & 0xFF0000) >> 16) / 255.0,
-                green: Double((rgbValue & 0x00FF00) >> 8) / 255.0,
-                blue: Double(rgbValue & 0x0000FF) / 255.0
-            )
-        } else if cString.count == 8 {
-            return Color(
-                red: Double((rgbValue & 0xFF000000) >> 24) / 255.0,
-                green: Double((rgbValue & 0x00FF0000) >> 16) / 255.0,
-                blue: Double((rgbValue & 0x0000FF00) >> 8) / 255.0,
-                opacity: Double(rgbValue & 0x000000FF) / 255.0
-            )
-        }
-        
-        return fallback
-    }
-}
-
 #endif
 
