@@ -54,32 +54,34 @@ struct LiveActivityView: View {
                     
                     // Right: Countdown + Emoji
                     HStack(alignment: .center, spacing: getDouble("countdownEmojiSpacing", fallback: 4.0)) {
-                        VStack(alignment: .leading, spacing: 0) {
-                            // "ENDS IN" label
-                            Text(context.state.data["countdownLabel"]?.asString() ?? "ENDS IN")
-                                .font(.system(size: getDouble("countdownLabelSize", fallback: 11.0), weight: .medium))
-                                .foregroundColor(Color.fromHex(context.state.data["countdownLabelColor"]?.asString(), fallback: .secondary))
-                                .background(isDebugSpacing ? Color.yellow.opacity(0.5) : Color.clear)
-                            
-                            // Countdown Timer
-                            if let countdownSeconds = getCountdownSeconds() {
-                                let endDate = Date().addingTimeInterval(countdownSeconds)
-                                Text(timerInterval: Date()...endDate, countsDown: true)
-                                    .font(.system(size: getDouble("countdownTimerSize", fallback: 24.0), weight: .bold))
-                                    .monospacedDigit()
-                                    .foregroundColor(Color.fromHex(context.state.data["countdownTimerColor"]?.asString(), fallback: .black))
-                                    .frame(width: getDouble("countdownTimerWidth", fallback: 72.0))
-                                    .background(isDebugSpacing ? Color.pink.opacity(0.4) : Color.clear)
-                            } else {
-                                Text("--:--")
-                                    .font(.system(size: getDouble("countdownTimerSize", fallback: 24.0), weight: .bold))
-                                    .monospacedDigit()
-                                    .foregroundColor(Color.fromHex(context.state.data["countdownTimerColor"]?.asString(), fallback: .black))
-                                    .frame(width: getDouble("countdownTimerWidth", fallback: 72.0))
-                                    .background(isDebugSpacing ? Color.pink.opacity(0.4) : Color.clear)
+                        if context.state.data["showCountdown"]?.asBool() ?? true {
+                            VStack(alignment: .leading, spacing: 0) {
+                                // "ENDS IN" label
+                                Text(context.state.data["countdownLabel"]?.asString() ?? "ENDS IN")
+                                    .font(.system(size: getDouble("countdownLabelSize", fallback: 11.0), weight: .medium))
+                                    .foregroundColor(Color.fromHex(context.state.data["countdownLabelColor"]?.asString(), fallback: .secondary))
+                                    .background(isDebugSpacing ? Color.yellow.opacity(0.5) : Color.clear)
+                                
+                                // Countdown Timer
+                                if let countdownSeconds = getCountdownSeconds() {
+                                    let endDate = Date().addingTimeInterval(countdownSeconds)
+                                    Text(timerInterval: Date()...endDate, countsDown: true)
+                                        .font(.system(size: getDouble("countdownTimerSize", fallback: 24.0), weight: .bold))
+                                        .monospacedDigit()
+                                        .foregroundColor(Color.fromHex(context.state.data["countdownTimerColor"]?.asString(), fallback: .black))
+                                        .frame(width: getDouble("countdownTimerWidth", fallback: 72.0))
+                                        .background(isDebugSpacing ? Color.pink.opacity(0.4) : Color.clear)
+                                } else {
+                                    Text("--:--")
+                                        .font(.system(size: getDouble("countdownTimerSize", fallback: 24.0), weight: .bold))
+                                        .monospacedDigit()
+                                        .foregroundColor(Color.fromHex(context.state.data["countdownTimerColor"]?.asString(), fallback: .black))
+                                        .frame(width: getDouble("countdownTimerWidth", fallback: 72.0))
+                                        .background(isDebugSpacing ? Color.pink.opacity(0.4) : Color.clear)
+                                }
                             }
+                            .background(isDebugSpacing ? Color.purple.opacity(0.3) : Color.clear)
                         }
-                        .background(isDebugSpacing ? Color.purple.opacity(0.3) : Color.clear)
                         
                         // Emoji on the side
                         if let showEmoji = context.state.data["showEmoji"]?.asBool(), showEmoji {
@@ -90,9 +92,9 @@ struct LiveActivityView: View {
                     }
                     .background(isDebugSpacing ? Color.red.opacity(0.2) : Color.clear)
                 }
-                .frame(height: 112) // ~70% of 160pt total
+                .frame(maxHeight: .infinity)
                 .padding(.horizontal, 16)
-                .padding(.top, 16)
+                .padding(.vertical, 16)
                 
                 // Button Section (30%) - Visual CTA
                 if context.state.data["showButton"]?.asBool() ?? true {
