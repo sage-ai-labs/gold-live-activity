@@ -54,7 +54,7 @@ struct LiveActivityView: View {
                     
                     // Right: Countdown + Emoji
                     HStack(alignment: .center, spacing: getDouble("countdownEmojiSpacing", fallback: 4.0)) {
-                        VStack(alignment: .center, spacing: 0) {
+                        VStack(alignment: .leading, spacing: 0) {
                             // "ENDS IN" label
                             Text(context.state.data["countdownLabel"]?.asString() ?? "ENDS IN")
                                 .font(.system(size: getDouble("countdownLabelSize", fallback: 11.0), weight: .medium))
@@ -95,15 +95,17 @@ struct LiveActivityView: View {
                 .padding(.top, 16)
                 
                 // Button Section (30%) - Visual CTA
-                Text((context.state.data["buttonText"]?.asString() ?? "Claim your Deals") + " ↗")
-                    .font(.system(size: getDouble("buttonTextSize", fallback: 16.0), weight: .bold))
-                    .foregroundColor(Color.fromHex(context.state.data["buttonTextColor"]?.asString(), fallback: .black))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(Color.fromHex(context.state.data["buttonColor"]?.asString(), fallback: Color(red: 0.89, green: 0.97, blue: 0.37)))
-                    .cornerRadius(getDouble("buttonBorderRadius", fallback: 12.0))
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, getDouble("buttonBottomPadding", fallback: 16.0))
+                if context.state.data["showButton"]?.asBool() ?? true {
+                    Text((context.state.data["buttonText"]?.asString() ?? "Claim your Deals") + " ↗")
+                        .font(.system(size: getDouble("buttonTextSize", fallback: 16.0), weight: .bold))
+                        .foregroundColor(Color.fromHex(context.state.data["buttonTextColor"]?.asString(), fallback: .black))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .background(Color.fromHex(context.state.data["buttonColor"]?.asString(), fallback: Color(red: 0.89, green: 0.97, blue: 0.37)))
+                        .cornerRadius(getDouble("buttonBorderRadius", fallback: 12.0))
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, getDouble("buttonBottomPadding", fallback: 16.0))
+                }
             }
             .frame(height: 160) // Fixed height for V1
             .background(gradientBackground)
