@@ -33,9 +33,9 @@ struct LiveActivityView: View {
                             }
                             
                             // App Name
-                            Text(context.state.data["appName"]?.asString() ?? "GOLD APP")
-                                .font(.system(size: getDouble("appNameSize", fallback: 17.0), weight: .bold))
-                                .foregroundColor(Color.fromHex(context.state.data["appNameColor"]?.asString(), fallback: .black))
+                            Text(context.state.data["title"]?.asString() ?? "GOLD APP")
+                                .font(getFont(context.state.data, familyKey: "titleFont", sizeKey: "titleSize", weightKey: "titleWeight", fallbackSize: 17.0, fallbackWeight: .bold))
+                                .foregroundColor(Color.fromHex(context.state.data["titleColor"]?.asString(), fallback: .black))
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
                                 .background(isDebugSpacing ? Color.cyan.opacity(0.4) : Color.clear)
@@ -43,7 +43,7 @@ struct LiveActivityView: View {
                         
                         // Row 2: Subtitle
                         Text(context.state.data["subtitle"]?.asString() ?? "Your deals are expiring")
-                            .font(.system(size: getDouble("subtitleSize", fallback: 15.0)))
+                            .font(getFont(context.state.data, familyKey: "subtitleFont", sizeKey: "subtitleSize", weightKey: "subtitleWeight", fallbackSize: 15.0, fallbackWeight: .regular))
                             .foregroundColor(Color.fromHex(context.state.data["subtitleColor"]?.asString(), fallback: .secondary))
                             .lineLimit(2)
                             .minimumScaleFactor(0.7)
@@ -58,7 +58,7 @@ struct LiveActivityView: View {
                             VStack(alignment: .leading, spacing: 0) {
                                 // "ENDS IN" label
                                 Text(context.state.data["countdownLabel"]?.asString() ?? "ENDS IN")
-                                    .font(.system(size: getDouble("countdownLabelSize", fallback: 11.0), weight: .medium))
+                                    .font(getFont(context.state.data, familyKey: "countdownLabelFont", sizeKey: "countdownLabelSize", weightKey: "countdownLabelWeight", fallbackSize: 11.0, fallbackWeight: .medium))
                                     .foregroundColor(Color.fromHex(context.state.data["countdownLabelColor"]?.asString(), fallback: .secondary))
                                     .background(isDebugSpacing ? Color.yellow.opacity(0.5) : Color.clear)
                                 
@@ -66,14 +66,14 @@ struct LiveActivityView: View {
                                 if let countdownSeconds = getCountdownSeconds() {
                                     let endDate = Date().addingTimeInterval(countdownSeconds)
                                     Text(timerInterval: Date()...endDate, countsDown: true)
-                                        .font(.system(size: getDouble("countdownTimerSize", fallback: 24.0), weight: .bold))
+                                        .font(getFont(context.state.data, familyKey: "countdownTimerFont", sizeKey: "countdownTimerSize", weightKey: "countdownTimerWeight", fallbackSize: 24.0, fallbackWeight: .bold))
                                         .monospacedDigit()
                                         .foregroundColor(Color.fromHex(context.state.data["countdownTimerColor"]?.asString(), fallback: .black))
                                         .frame(width: getDouble("countdownTimerWidth", fallback: 72.0))
                                         .background(isDebugSpacing ? Color.pink.opacity(0.4) : Color.clear)
                                 } else {
                                     Text("--:--")
-                                        .font(.system(size: getDouble("countdownTimerSize", fallback: 24.0), weight: .bold))
+                                        .font(getFont(context.state.data, familyKey: "countdownTimerFont", sizeKey: "countdownTimerSize", weightKey: "countdownTimerWeight", fallbackSize: 24.0, fallbackWeight: .bold))
                                         .monospacedDigit()
                                         .foregroundColor(Color.fromHex(context.state.data["countdownTimerColor"]?.asString(), fallback: .black))
                                         .frame(width: getDouble("countdownTimerWidth", fallback: 72.0))
@@ -99,7 +99,7 @@ struct LiveActivityView: View {
                 // Button Section (30%) - Visual CTA
                 if context.state.data["showButton"]?.asBool() ?? true {
                     Text((context.state.data["buttonText"]?.asString() ?? "Claim your Deals") + " ↗")
-                        .font(.system(size: getDouble("buttonTextSize", fallback: 16.0), weight: .bold))
+                        .font(getFont(context.state.data, familyKey: "buttonFont", sizeKey: "buttonTextSize", weightKey: "buttonWeight", fallbackSize: 16.0, fallbackWeight: .bold))
                         .foregroundColor(Color.fromHex(context.state.data["buttonTextColor"]?.asString(), fallback: .black))
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
@@ -113,7 +113,7 @@ struct LiveActivityView: View {
             .background(gradientBackground)
             .cornerRadius(16)
             .widgetURL(URL(string: context.state.data["deepLinkUrl"]?.asString() ?? "gold-app://golden-hour"))
-            .id("\(getDouble("appNameSize", fallback: 17.0))-\(getDouble("subtitleSize", fallback: 15.0))-\(getDouble("emojiSize", fallback: 20.0))-\(getDouble("iconSize", fallback: 40.0))-\(getDouble("buttonBorderRadius", fallback: 12.0))")
+            .id("\(getDouble("titleSize", fallback: 17.0))-\(getDouble("subtitleSize", fallback: 15.0))-\(getDouble("emojiSize", fallback: 20.0))-\(getDouble("iconSize", fallback: 40.0))-\(getDouble("buttonBorderRadius", fallback: 12.0))")
             .onAppear {
                 logReceivedData()
             }
@@ -143,7 +143,7 @@ struct LiveActivityView: View {
     
     private func logReceivedData() {
         logger.info("🔄 [LiveActivity] Widget body rendering")
-        logger.info("📊 [LiveActivity] appNameSize: \(getDouble("appNameSize", fallback: -1))")
+        logger.info("📊 [LiveActivity] titleSize: \(getDouble("titleSize", fallback: -1))")
         logger.info("📊 [LiveActivity] subtitleSize: \(getDouble("subtitleSize", fallback: -1))")
         logger.info("📊 [LiveActivity] iconSize: \(getDouble("iconSize", fallback: -1))")
         logger.info("📊 [LiveActivity] emojiSize: \(getDouble("emojiSize", fallback: -1))")
@@ -151,7 +151,7 @@ struct LiveActivityView: View {
         logger.info("📊 [LiveActivity] countdownTimerSize: \(getDouble("countdownTimerSize", fallback: -1))")
         logger.info("📊 [LiveActivity] countdownEmojiSpacing: \(getDouble("countdownEmojiSpacing", fallback: -1))")
         logger.info("📊 [LiveActivity] buttonBorderRadius: \(getDouble("buttonBorderRadius", fallback: -1))")
-        logger.info("📝 [LiveActivity] appName: \(context.state.data["appName"]?.asString() ?? "nil")")
+        logger.info("📝 [LiveActivity] title: \(context.state.data["title"]?.asString() ?? "nil")")
         logger.info("📝 [LiveActivity] subtitle: \(context.state.data["subtitle"]?.asString() ?? "nil")")
         logger.info("🎨 [LiveActivity] backgroundColor1: \(context.state.data["backgroundColor1"]?.asString() ?? "nil")")
         logger.info("🎨 [LiveActivity] backgroundColor2: \(context.state.data["backgroundColor2"]?.asString() ?? "nil")")
@@ -162,29 +162,13 @@ struct LiveActivityView: View {
         logger.info("🔑 [LiveActivity] All data keys: \(context.state.data.keys)")
     }
     
-    /// Safely parse a numeric value from OneSignal data.
-    /// OneSignal may send numbers as Double, Int, or String depending on the update method.
+    /// Convenience wrapper around the shared getData helper
     private func getDouble(_ key: String, fallback: Double) -> Double {
-        if let val = context.state.data[key]?.asDouble() {
-            return val
-        } else if let val = context.state.data[key]?.asInt() {
-            return Double(val)
-        } else if let str = context.state.data[key]?.asString(), let val = Double(str) {
-            return val
-        }
-        return fallback
+        return getData(context.state.data, key: key, fallback: fallback)
     }
     
     private func getCountdownSeconds() -> Double? {
-        if let countdownSeconds = context.state.data["countdownSeconds"]?.asDouble() {
-            return countdownSeconds
-        } else if let countdownSecondsInt = context.state.data["countdownSeconds"]?.asInt() {
-            return Double(countdownSecondsInt)
-        } else if let countdownSecondsString = context.state.data["countdownSeconds"]?.asString(),
-                  let countdownValue = Double(countdownSecondsString) {
-            return countdownValue
-        }
-        return nil
+        return getCountdownSecondsFromData(context.state.data)
     }
 }
 
