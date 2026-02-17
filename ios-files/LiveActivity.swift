@@ -174,7 +174,7 @@ struct LiveActivity: Widget {
                         .clipShape(Circle())
                 }
             }
-            .widgetURL(URL(string: context.state.data["deepLinkUrl"]?.asString() ?? "gold-app://golden-hour"))
+            .onesignalWidgetURL(URL(string: context.state.data["deepLinkUrl"]?.asString() ?? "gold-app://golden-hour"), context: context)
         }
     }
 }

@@ -112,7 +112,7 @@ struct LiveActivityView: View {
             .frame(height: 160) // Fixed height for V1
             .background(gradientBackground)
             .cornerRadius(16)
-            .widgetURL(URL(string: context.state.data["deepLinkUrl"]?.asString() ?? "gold-app://golden-hour"))
+            .onesignalWidgetURL(URL(string: context.state.data["deepLinkUrl"]?.asString() ?? "gold-app://golden-hour"), context: context)
             .id("\(getDouble("titleSize", fallback: 17.0))-\(getDouble("subtitleSize", fallback: 15.0))-\(getDouble("emojiSize", fallback: 20.0))-\(getDouble("iconSize", fallback: 40.0))-\(getDouble("buttonBorderRadius", fallback: 12.0))")
             .onAppear {
                 logReceivedData()
