@@ -38,7 +38,7 @@ const util = __importStar(require("util"));
 function addBuildPhases(xcodeProject, { targetUuid, groupName, productFile, widgetFiles, }) {
     const buildPath = `""`;
     const folderType = 'app_extension';
-    const { swiftFiles, intentFiles, assetDirectories } = widgetFiles;
+    const { swiftFiles, intentFiles, assetDirectories, fontFiles } = widgetFiles;
     // Sources build phase
     xcodeProject.addBuildPhase([...swiftFiles, ...intentFiles], 'PBXSourcesBuildPhase', groupName, targetUuid, folderType, buildPath);
     // Copy files build phase
@@ -51,5 +51,5 @@ function addBuildPhases(xcodeProject, { targetUuid, groupName, productFile, widg
     // Frameworks build phase
     xcodeProject.addBuildPhase([], 'PBXFrameworksBuildPhase', groupName, targetUuid, folderType, buildPath);
     // Resources build phase
-    xcodeProject.addBuildPhase([...assetDirectories], 'PBXResourcesBuildPhase', groupName, targetUuid, folderType, buildPath);
+    xcodeProject.addBuildPhase([...assetDirectories, ...fontFiles], 'PBXResourcesBuildPhase', groupName, targetUuid, folderType, buildPath);
 }

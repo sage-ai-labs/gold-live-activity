@@ -5,6 +5,7 @@ export type WidgetFiles = {
     assetDirectories: string[];
     intentFiles: string[];
     otherFiles: string[];
+    fontFiles: string[];
 };
 export declare function getWidgetFiles(targetPath: string): WidgetFiles;
 export declare function copyFileSync(source: string, target: string): void;

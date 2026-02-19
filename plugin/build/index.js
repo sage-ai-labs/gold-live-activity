@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const config_plugins_1 = require("expo/config-plugins");
 const withConfig_1 = require("./withConfig");
+const withPodfile_1 = require("./withPodfile");
 const withPlist_1 = __importDefault(require("./withPlist"));
 const withPushNotifications_1 = require("./withPushNotifications");
 const withWidgetExtensionEntitlements_1 = require("./withWidgetExtensionEntitlements");
@@ -33,6 +34,7 @@ const withWidgetsAndLiveActivities = (config, props) => {
         ],
         [withWidgetExtensionEntitlements_1.withWidgetExtensionEntitlements, { targetName }],
         [withConfig_1.withConfig, { targetName, bundleIdentifier }],
+        [withPodfile_1.withPodfile, { targetName }],
     ]);
     if (props?.enablePushNotifications) {
         config = (0, withPushNotifications_1.withPushNotifications)(config);

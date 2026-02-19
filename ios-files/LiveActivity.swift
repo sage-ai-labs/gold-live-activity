@@ -154,7 +154,8 @@ struct LiveActivity: Widget {
                         .font(.system(size: CGFloat(getData(context.state.data, key: "diCompactTrailingCountdownSize", fallback: 14.0)), weight: .bold))
                         .monospacedDigit()
                         .foregroundColor(Color.fromHex(context.state.data["diCompactTrailingCountdownColor"]?.asString(), fallback: .white))
-                        .frame(width: CGFloat(getData(context.state.data, key: "diCompactTrailingCountdownWidth", fallback: 50.0)))
+                        .frame(width: CGFloat(getData(context.state.data, key: "diCompactTrailingCountdownWidth", fallback: 50.0)), alignment: .trailing)
+                        .multilineTextAlignment(.trailing)
                 } else {
                     Text(context.state.data["emojiCharacter"]?.asString() ?? "⏳")
                         .font(.system(size: 14))

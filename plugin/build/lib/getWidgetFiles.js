@@ -54,6 +54,7 @@ function getWidgetFiles(targetPath) {
         assetDirectories: [],
         intentFiles: [],
         otherFiles: [],
+        fontFiles: [],
     };
     if (!fs.existsSync(targetPath)) {
         fs.mkdirSync(targetPath, { recursive: true });
@@ -111,6 +112,7 @@ function getWidgetFiles(targetPath) {
             // Only copy if it's a file (not a directory)
             if (fs.lstatSync(source).isFile()) {
                 fs.copyFileSync(source, dest);
+                widgetFiles.fontFiles.push(path.join('Fonts', file));
             }
         });
     }
@@ -155,6 +157,10 @@ function copyFileSync(source, target) {
     let targetFile = target;
     if (fs.existsSync(target) && fs.lstatSync(target).isDirectory()) {
         targetFile = path.join(target, path.basename(source));
+    }
+    // Skip if source is a directory (will be handled separately)
+    if (fs.lstatSync(source).isDirectory()) {
+        return;
     }
     fs.writeFileSync(targetFile, fs.readFileSync(source));
 }

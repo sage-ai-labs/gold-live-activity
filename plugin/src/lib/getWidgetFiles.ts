@@ -8,6 +8,7 @@ export type WidgetFiles = {
   assetDirectories: string[]
   intentFiles: string[]
   otherFiles: string[]
+  fontFiles: string[]
 }
 
 export function getWidgetFiles(targetPath: string) {
@@ -27,6 +28,7 @@ export function getWidgetFiles(targetPath: string) {
     assetDirectories: [],
     intentFiles: [],
     otherFiles: [],
+    fontFiles: [],
   }
 
   if (!fs.existsSync(targetPath)) {
@@ -85,6 +87,7 @@ export function getWidgetFiles(targetPath: string) {
       // Only copy if it's a file (not a directory)
       if (fs.lstatSync(source).isFile()) {
         fs.copyFileSync(source, dest)
+        widgetFiles.fontFiles.push(path.join('Fonts', file))
       }
     })
   }

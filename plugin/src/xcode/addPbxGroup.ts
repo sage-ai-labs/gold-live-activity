@@ -12,7 +12,7 @@ export function addPbxGroup(
     widgetFiles: WidgetFiles
   }
 ) {
-  const { swiftFiles, intentFiles, otherFiles, assetDirectories, entitlementFiles, plistFiles } = widgetFiles
+  const { swiftFiles, intentFiles, otherFiles, assetDirectories, entitlementFiles, plistFiles, fontFiles } = widgetFiles
 
   // Add PBX group
   const { uuid: pbxGroupUuid } = xcodeProject.addPbxGroup(
@@ -23,6 +23,7 @@ export function addPbxGroup(
       ...entitlementFiles,
       ...plistFiles,
       ...assetDirectories,
+      ...fontFiles,
       `${targetName}.entitlements`,
     ],
     targetName,
