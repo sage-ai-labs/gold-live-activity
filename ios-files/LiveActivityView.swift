@@ -138,7 +138,7 @@ struct LiveActivityView: View {
     //
     // ┌──────────────────────────────────────────┐
     // │                                 [ℹ️ icon]│
-    // │ GOLDEN HOUR ENDS          11:01          │
+    // │ GOLDEN HOUR ENDS                  11:01  │
     // │ SOON                                     │
     // │                                          │
     // │ ┌──────────────────────────────────────┐ │
@@ -151,19 +151,21 @@ struct LiveActivityView: View {
             VStack(spacing: 0) {
                 // Top section: Title + Countdown side by side
                 GeometryReader { geo in
-                    let totalWidth = geo.size.width - 8 // subtract HStack spacing
+                    let titleMaxWidth = geo.size.width * CGFloat(getDouble("titleMaxWidthFraction", fallback: 0.45))
                     HStack(alignment: .center, spacing: 8) {
-                        // Left: Multi-line title (40%)
+                        // Left: Multi-line title (capped width so countdown always has room)
                         Text(context.state.data["title"]?.asString() ?? "GOLDEN HOUR ENDS SOON")
                             .font(getFont(context.state.data, familyKey: "titleFont", sizeKey: "titleSize", weightKey: "titleWeight", fallbackSize: 24.0, fallbackWeight: .bold))
                             .foregroundColor(Color.fromHex(context.state.data["titleColor"]?.asString(), fallback: .black))
                             .lineLimit(3)
                             .minimumScaleFactor(0.6)
-                            .frame(width: totalWidth * 0.4, alignment: .leading)
+                            .frame(maxWidth: titleMaxWidth, alignment: .leading)
                             .padding(.leading, CGFloat(getDouble("titleLeftPadding", fallback: 0.0)))
                             .background(isDebugSpacing ? Color.cyan.opacity(0.4) : Color.clear)
 
-                        // Right: Large countdown timer (60%)
+                        Spacer(minLength: 4)
+
+                        // Right: Large countdown timer (pushed to trailing edge)
                         if context.state.data["showCountdown"]?.asBool() ?? true {
                             if let countdownSeconds = getCountdownSeconds() {
                                 let endDate = Date().addingTimeInterval(countdownSeconds)
@@ -171,19 +173,23 @@ struct LiveActivityView: View {
                                     .font(getFont(context.state.data, familyKey: "countdownTimerFont", sizeKey: "countdownTimerSize", weightKey: "countdownTimerWeight", fallbackSize: 48.0, fallbackWeight: .bold))
                                     .monospacedDigit()
                                     .foregroundColor(Color.fromHex(context.state.data["countdownTimerColor"]?.asString(), fallback: .black))
-                                    .frame(width: totalWidth * 0.6, alignment: .trailing)
+                                    .frame(width: getDouble("countdownTimerWidth", fallback: 145.0), alignment: .trailing)
+                                    .clipped()
+                                    .layoutPriority(1)
                                     .background(isDebugSpacing ? Color.pink.opacity(0.4) : Color.clear)
                             } else {
                                 Text("--:--")
                                     .font(getFont(context.state.data, familyKey: "countdownTimerFont", sizeKey: "countdownTimerSize", weightKey: "countdownTimerWeight", fallbackSize: 48.0, fallbackWeight: .bold))
                                     .monospacedDigit()
                                     .foregroundColor(Color.fromHex(context.state.data["countdownTimerColor"]?.asString(), fallback: .black))
-                                    .frame(width: totalWidth * 0.6, alignment: .trailing)
+                                    .frame(width: getDouble("countdownTimerWidth", fallback: 145.0), alignment: .trailing)
+                                    .clipped()
+                                    .layoutPriority(1)
                                     .background(isDebugSpacing ? Color.pink.opacity(0.4) : Color.clear)
                             }
                         }
                     }
-                    .frame(maxHeight: .infinity)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
