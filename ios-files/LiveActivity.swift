@@ -119,7 +119,12 @@ struct LiveActivity: Widget {
             DynamicIsland {
                 // MARK: - Expanded (long-press)
                 DynamicIslandExpandedRegion(.leading) {
-                    DynamicIslandLeadingView(data: context.state.data)
+                    let variant = context.state.data["layoutVariant"]?.asString() ?? "javi"
+                    if variant == "tiffany" {
+                        EmptyView()
+                    } else {
+                        DynamicIslandLeadingView(data: context.state.data)
+                    }
                 }
 
                 DynamicIslandExpandedRegion(.center) {
@@ -127,11 +132,21 @@ struct LiveActivity: Widget {
                 }
 
                 DynamicIslandExpandedRegion(.trailing) {
-                    DynamicIslandTrailingView(data: context.state.data)
+                    let variant = context.state.data["layoutVariant"]?.asString() ?? "javi"
+                    if variant == "tiffany" {
+                        EmptyView()
+                    } else {
+                        DynamicIslandTrailingView(data: context.state.data)
+                    }
                 }
 
                 DynamicIslandExpandedRegion(.bottom) {
-                    DynamicIslandBottomView(data: context.state.data)
+                    let variant = context.state.data["layoutVariant"]?.asString() ?? "javi"
+                    if variant == "tiffany" {
+                        TiffanyDynamicIslandBottomView(data: context.state.data)
+                    } else {
+                        DynamicIslandBottomView(data: context.state.data)
+                    }
                 }
             } compactLeading: {
                 // MARK: - Compact Leading (icon or emoji)
@@ -151,7 +166,7 @@ struct LiveActivity: Widget {
                 // MARK: - Compact Trailing
                 if let seconds = getCountdownSecondsFromData(context.state.data), seconds > 0 {
                     Text(timerInterval: Date()...Date().addingTimeInterval(seconds), countsDown: true)
-                        .font(.system(size: CGFloat(getData(context.state.data, key: "diCompactTrailingCountdownSize", fallback: 14.0)), weight: .bold))
+                        .font(getFont(context.state.data, familyKey: "diCompactTrailingFont", sizeKey: "diCompactTrailingCountdownSize", weightKey: "diCompactTrailingWeight", fallbackSize: 14.0, fallbackWeight: .bold))
                         .monospacedDigit()
                         .foregroundColor(Color.fromHex(context.state.data["diCompactTrailingCountdownColor"]?.asString(), fallback: .white))
                         .frame(width: CGFloat(getData(context.state.data, key: "diCompactTrailingCountdownWidth", fallback: 50.0)), alignment: .trailing)
@@ -332,7 +347,7 @@ struct DynamicIslandTrailingView: View {
         if showDI, data["diExpandedShowCountdown"]?.asBool() ?? true {
             if let seconds = getCountdownSecondsFromData(data), seconds > 0 {
                 Text(timerInterval: Date()...Date().addingTimeInterval(seconds), countsDown: true, showsHours: data["diExpandedShowHours"]?.asBool() ?? false)
-                    .font(.system(size: CGFloat(getData(data, key: "diExpandedCountdownSize", fallback: 20.0)), weight: .bold))
+                    .font(getFont(data, familyKey: "diExpandedCountdownFont", sizeKey: "diExpandedCountdownSize", weightKey: "diExpandedCountdownWeight", fallbackSize: 20.0, fallbackWeight: .bold))
                     .monospacedDigit()
                     .foregroundColor(Color.fromHex(data["diExpandedCountdownColor"]?.asString(), fallback: .white))
                     .frame(width: CGFloat(getData(data, key: "diExpandedCountdownWidth", fallback: 60.0)))
@@ -363,6 +378,64 @@ struct DynamicIslandMinimalView: View {
                     height: CGFloat(getData(data, key: "diMinimalIconSize", fallback: 20.0))
                 )
                 .clipShape(Circle())
+        }
+    }
+}
+
+// MARK: - Tiffany Dynamic Island Expanded Bottom
+// Layout: icon + label on left, centered countdown
+
+@available(iOS 16.2, *)
+struct TiffanyDynamicIslandBottomView: View {
+    let data: [String: OneSignalLiveActivities.AnyCodable]
+
+    private var showDI: Bool { data["showDynamicIsland"]?.asBool() ?? true }
+    private var emoji: String { data["emojiCharacter"]?.asString() ?? "⏳" }
+
+    var body: some View {
+        if showDI {
+            // Single row: [ icon  title  ...  countdown ]
+            HStack(spacing: 6) {
+                // Icon
+                if (data["diExpandedLeadingType"]?.asString() ?? "icon") == "emoji" {
+                    Text(emoji)
+                        .font(.system(size: CGFloat(getData(data, key: "diExpandedEmojiSize", fallback: 24.0))))
+                } else {
+                    Image("GoldAppIcon")
+                        .resizable()
+                        .frame(
+                            width: CGFloat(getData(data, key: "diExpandedIconSize", fallback: 28.0)),
+                            height: CGFloat(getData(data, key: "diExpandedIconSize", fallback: 28.0))
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: CGFloat(getData(data, key: "diExpandedIconBorderRadius", fallback: 6.0))))
+                }
+
+                // Title
+                Text(data["diExpandedTitle"]?.asString()
+                     ?? data["title"]?.asString()
+                     ?? "Last chance")
+                    .font(getFont(data, familyKey: "diExpandedTitleFont", sizeKey: "diExpandedTitleSize", weightKey: "diExpandedTitleWeight", fallbackSize: 14.0, fallbackWeight: .medium))
+                    .foregroundColor(Color.fromHex(data["diExpandedTitleColor"]?.asString(), fallback: .white))
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+
+                // Countdown
+                if data["diExpandedShowCountdown"]?.asBool() ?? true {
+                    if let seconds = getCountdownSecondsFromData(data), seconds > 0 {
+                        Text(timerInterval: Date()...Date().addingTimeInterval(seconds), countsDown: true, showsHours: data["diExpandedShowHours"]?.asBool() ?? false)
+                            .font(getFont(data, familyKey: "diExpandedCountdownFont", sizeKey: "diExpandedCountdownSize", weightKey: "diExpandedCountdownWeight", fallbackSize: 32.0, fallbackWeight: .bold))
+                            .monospacedDigit()
+                            .foregroundColor(Color.fromHex(data["diExpandedCountdownColor"]?.asString(), fallback: .white))
+                            .frame(width: CGFloat(getData(data, key: "diExpandedCountdownWidth", fallback: 100.0)), alignment: .trailing)
+                    } else {
+                        Text(emoji)
+                            .font(.system(size: 20))
+                    }
+                }
+            }
+            .padding(.horizontal, 4)
+            .offset(y: CGFloat(getData(data, key: "diExpandedBottomOffsetY", fallback: -8.0)))
         }
     }
 }
