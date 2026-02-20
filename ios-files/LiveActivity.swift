@@ -112,9 +112,9 @@ func getCountdownSecondsFromData(_ data: [String: OneSignalLiveActivities.AnyCod
 @available(iOS 16.2, *)
 struct LiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: DefaultLiveActivityAttributes.self) { context in
-            // Lock screen / banner UI using OneSignal's DefaultLiveActivityAttributes
-            LiveActivityView(context: context)
+        let config = ActivityConfiguration(for: DefaultLiveActivityAttributes.self) { context in
+            // Lock screen / banner + Apple Watch supplemental band
+            LiveActivityContentView(context: context)
         } dynamicIsland: { context in
             DynamicIsland {
                 // MARK: - Expanded (long-press)
@@ -192,6 +192,89 @@ struct LiveActivity: Widget {
             }
             .onesignalWidgetURL(URL(string: context.state.data["deepLinkUrl"]?.asString() ?? "gold-app://golden-hour"), context: context)
         }
+
+        if #available(iOS 18.0, *) {
+            return config.supplementalActivityFamilies([.small])
+        } else {
+            return config
+        }
+    }
+}
+
+// MARK: - Content View Router (iPhone lock screen vs Apple Watch)
+
+@available(iOS 16.2, *)
+struct LiveActivityContentView: View {
+    let context: ActivityViewContext<DefaultLiveActivityAttributes>
+
+    var body: some View {
+        if #available(iOS 18.0, *) {
+            LiveActivityContentViewiOS18(context: context)
+        } else {
+            LiveActivityView(context: context)
+        }
+    }
+}
+
+@available(iOS 18.0, *)
+struct LiveActivityContentViewiOS18: View {
+    let context: ActivityViewContext<DefaultLiveActivityAttributes>
+    @Environment(\.activityFamily) var activityFamily
+
+    var body: some View {
+        switch activityFamily {
+        case .small:
+            WatchBandView(data: context.state.data)
+        default:
+            LiveActivityView(context: context)
+        }
+    }
+}
+
+// MARK: - Apple Watch Supplemental Band View
+
+@available(iOS 16.2, *)
+struct WatchBandView: View {
+    let data: [String: OneSignalLiveActivities.AnyCodable]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            // Row 1: icon + countdown
+            HStack(spacing: 6) {
+                Image("GoldAppIcon")
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+
+                if let seconds = getCountdownSecondsFromData(data), seconds > 0 {
+                    Text(timerInterval: Date()...Date().addingTimeInterval(seconds), countsDown: true)
+                        .font(.system(size: 18, weight: .bold))
+                        .monospacedDigit()
+                        .foregroundColor(.white)
+                }
+
+                Spacer()
+            }
+
+            // Title
+            Text(data["watchTitle"]?.asString()
+                 ?? data["title"]?.asString()
+                 ?? "GOLDEN HOUR")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(.white)
+                .lineLimit(1)
+
+            // Subtitle
+            if let subtitle = data["watchSubtitle"]?.asString()
+                              ?? data["subtitle"]?.asString() {
+                Text(subtitle)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.white.opacity(0.7))
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, 4)
+        .padding(.vertical, 4)
     }
 }
 
