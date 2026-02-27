@@ -11,7 +11,7 @@ struct LiveActivityView: View {
     private let logger = Logger(subsystem: "com.usegold.app", category: "LiveActivity")
 
     private var layoutVariant: String {
-        context.state.data["layoutVariant"]?.asString() ?? "javi"
+        context.state.data["layoutVariant"]?.asString() ?? "tiffany"
     }
 
     var body: some View {
@@ -121,9 +121,13 @@ struct LiveActivityView: View {
 
             // Button Section (30%) - Visual CTA
             if context.state.data["showButton"]?.asBool() ?? true {
-                Text((context.state.data["buttonText"]?.asString() ?? "Claim your Deals") + " ↗")
+                let btnTextColor = Color.fromHex(context.state.data["buttonTextColor"]?.asString(), fallback: .black)
+                let btnSize = CGFloat(getDouble("buttonTextSize", fallback: 16.0))
+                (Text(context.state.data["buttonText"]?.asString() ?? "Claim your Deals")
                     .font(getFont(context.state.data, familyKey: "buttonFont", sizeKey: "buttonTextSize", weightKey: "buttonWeight", fallbackSize: 16.0, fallbackWeight: .bold))
-                    .foregroundColor(Color.fromHex(context.state.data["buttonTextColor"]?.asString(), fallback: .black))
+                + Text(" \u{2197}")
+                    .font(.system(size: btnSize, weight: .bold)))
+                    .foregroundColor(btnTextColor)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
                     .background(Color.fromHex(context.state.data["buttonColor"]?.asString(), fallback: Color(red: 0.89, green: 0.97, blue: 0.37)))
@@ -152,18 +156,18 @@ struct LiveActivityView: View {
                 // Top section: Title + Countdown side by side
                 GeometryReader { geo in
                     let titleMaxWidth = geo.size.width * CGFloat(getDouble("titleMaxWidthFraction", fallback: 0.45))
-                    HStack(alignment: .center, spacing: 8) {
+                    HStack(alignment: .center, spacing: CGFloat(getDouble("titleCountdownSpacing", fallback: 16.0))) {
                         // Left: Multi-line title (capped width so countdown always has room)
                         Text(context.state.data["title"]?.asString() ?? "GOLDEN HOUR ENDS SOON")
                             .font(getFont(context.state.data, familyKey: "titleFont", sizeKey: "titleSize", weightKey: "titleWeight", fallbackSize: 24.0, fallbackWeight: .bold))
                             .foregroundColor(Color.fromHex(context.state.data["titleColor"]?.asString(), fallback: .black))
                             .lineLimit(3)
                             .minimumScaleFactor(0.6)
-                            .frame(maxWidth: titleMaxWidth, alignment: .leading)
                             .padding(.leading, CGFloat(getDouble("titleLeftPadding", fallback: 0.0)))
+                            .frame(maxWidth: titleMaxWidth, alignment: .leading)
                             .background(isDebugSpacing ? Color.cyan.opacity(0.4) : Color.clear)
 
-                        Spacer(minLength: 4)
+                        Spacer(minLength: 0)
 
                         // Right: Large countdown timer (pushed to trailing edge)
                         if context.state.data["showCountdown"]?.asBool() ?? true {
@@ -196,9 +200,13 @@ struct LiveActivityView: View {
 
                 // Button Section
                 if context.state.data["showButton"]?.asBool() ?? true {
-                    Text((context.state.data["buttonText"]?.asString() ?? "Claim your Deals") + "↗")
+                    let btnTextColor = Color.fromHex(context.state.data["buttonTextColor"]?.asString(), fallback: .black)
+                    let btnSize = CGFloat(getDouble("buttonTextSize", fallback: 16.0))
+                    (Text(context.state.data["buttonText"]?.asString() ?? "Claim your Deals")
                         .font(getFont(context.state.data, familyKey: "buttonFont", sizeKey: "buttonTextSize", weightKey: "buttonWeight", fallbackSize: 16.0, fallbackWeight: .bold))
-                        .foregroundColor(Color.fromHex(context.state.data["buttonTextColor"]?.asString(), fallback: .black))
+                    + Text(" \u{2197}")
+                        .font(.system(size: btnSize, weight: .bold)))
+                        .foregroundColor(btnTextColor)
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
                         .background(Color.fromHex(context.state.data["buttonColor"]?.asString(), fallback: Color(red: 0.89, green: 0.97, blue: 0.37)))
@@ -213,8 +221,8 @@ struct LiveActivityView: View {
                 Image(systemName: "exclamationmark.circle.fill")
                     .font(.system(size: getDouble("infoIconSize", fallback: 24.0)))
                     .foregroundColor(.red)
-                    .padding(.top, 12)
-                    .padding(.trailing, 16)
+                    .padding(.top, CGFloat(getDouble("infoIconTopPadding", fallback: 12.0)))
+                    .padding(.trailing, CGFloat(getDouble("infoIconTrailingPadding", fallback: 16.0)))
             }
         }
     }
