@@ -145,7 +145,7 @@ struct LiveActivity: Widget {
                             width: CGFloat(getData(context.state.data, key: "diCompactLeadingIconSize", fallback: 20.0)),
                             height: CGFloat(getData(context.state.data, key: "diCompactLeadingIconSize", fallback: 20.0))
                         )
-                        .clipShape(RoundedRectangle(cornerRadius: CGFloat(getData(context.state.data, key: "diCompactLeadingIconBorderRadius", fallback: 5.0))))
+                        .clipShape(Circle())
                 }
             } compactTrailing: {
                 // MARK: - Compact Trailing
@@ -417,8 +417,10 @@ struct DynamicIslandTrailingView: View {
                 Text(timerInterval: Date()...Date().addingTimeInterval(seconds), countsDown: true, showsHours: data["diExpandedShowHours"]?.asBool() ?? false)
                     .font(getFont(data, familyKey: "diExpandedCountdownFont", sizeKey: "diExpandedCountdownSize", weightKey: "diExpandedCountdownWeight", fallbackSize: 20.0, fallbackWeight: .bold))
                     .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
                     .foregroundColor(Color.fromHex(data["diExpandedCountdownColor"]?.asString(), fallback: .white))
-                    .frame(width: CGFloat(getData(data, key: "diExpandedCountdownWidth", fallback: 60.0)))
+                    .frame(width: CGFloat(getData(data, key: "diExpandedCountdownWidth", fallback: 90.0)))
             } else {
                 Text(emoji)
                     .font(.system(size: 20))
