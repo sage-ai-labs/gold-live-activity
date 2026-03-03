@@ -176,6 +176,8 @@ struct LiveActivityView: View {
                                 Text(timerInterval: Date()...endDate, countsDown: true)
                                     .font(getFont(context.state.data, familyKey: "countdownTimerFont", sizeKey: "countdownTimerSize", weightKey: "countdownTimerWeight", fallbackSize: 48.0, fallbackWeight: .bold))
                                     .monospacedDigit()
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.5)
                                     .foregroundColor(Color.fromHex(context.state.data["countdownTimerColor"]?.asString(), fallback: .black))
                                     .frame(width: getDouble("countdownTimerWidth", fallback: 145.0), alignment: .trailing)
                                     .clipped()
