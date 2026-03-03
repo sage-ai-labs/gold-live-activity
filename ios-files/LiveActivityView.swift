@@ -161,7 +161,7 @@ struct LiveActivityView: View {
                         Text(context.state.data["title"]?.asString() ?? "GOLDEN HOUR ENDS SOON")
                             .font(getFont(context.state.data, familyKey: "titleFont", sizeKey: "titleSize", weightKey: "titleWeight", fallbackSize: 24.0, fallbackWeight: .bold))
                             .foregroundColor(Color.fromHex(context.state.data["titleColor"]?.asString(), fallback: .black))
-                            .lineLimit(3)
+                            .lineLimit(2)
                             .minimumScaleFactor(0.6)
                             .padding(.leading, CGFloat(getDouble("titleLeftPadding", fallback: 0.0)))
                             .frame(maxWidth: titleMaxWidth, alignment: .leading)
