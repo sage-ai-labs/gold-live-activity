@@ -25,6 +25,7 @@ DerivedData
 *.ipa
 *.xcuserstate
 project.xcworkspace
+*.xcworkspace
 
 # Android/IJ
 #
@@ -58,3 +59,6 @@ yarn-error.log
 
 # TypeScript
 plugin/tsconfig.tsbuildinfo
+
+# Countdown Tests
+.build/

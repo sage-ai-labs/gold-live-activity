@@ -93,17 +93,49 @@ private func swiftUIWeight(_ weight: String, fallback: Font.Weight) -> Font.Weig
     }
 }
 
+/// Pure function: parse an ISO 8601 string and return seconds until that date, or nil if past/invalid.
+/// Extracted for testability — no OneSignal dependency.
+func secondsUntilISO8601Date(_ isoString: String) -> Double? {
+    let formatter = ISO8601DateFormatter()
+
+    // Try with fractional seconds first (e.g. "2026-01-16T02:45:00.000Z")
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    if let endDate = formatter.date(from: isoString) {
+        let seconds = endDate.timeIntervalSinceNow
+        return seconds > 0 ? seconds : nil
+    }
+
+    // Fallback: without fractional seconds (e.g. "2026-01-16T02:45:00Z")
+    formatter.formatOptions = [.withInternetDateTime]
+    if let endDate = formatter.date(from: isoString) {
+        let seconds = endDate.timeIntervalSinceNow
+        return seconds > 0 ? seconds : nil
+    }
+
+    return nil
+}
+
 /// Parse countdown seconds from OneSignal data
 func getCountdownSecondsFromData(_ data: [String: OneSignalLiveActivities.AnyCodable]) -> Double? {
-    if let countdownSeconds = data["countdownSeconds"]?.asDouble() {
-        return countdownSeconds
-    } else if let countdownSecondsInt = data["countdownSeconds"]?.asInt() {
-        return Double(countdownSecondsInt)
-    } else if let countdownSecondsString = data["countdownSeconds"]?.asString(),
-              let countdownValue = Double(countdownSecondsString) {
-        return countdownValue
+    // Legacy duration from server (upper bound — used to cap end-time calculation)
+    let legacySeconds: Double? = {
+        if let v = data["countdownSeconds"]?.asDouble() { return v }
+        if let v = data["countdownSeconds"]?.asInt() { return Double(v) }
+        if let s = data["countdownSeconds"]?.asString(), let v = Double(s) { return v }
+        return nil
+    }()
+
+    // Prefer absolute end time for accuracy (handles late delivery)
+    if let isoString = data["goldenHourEndTime"]?.asString(),
+       let endTimeSeconds = secondsUntilISO8601Date(isoString) {
+        // Cap at legacySeconds if present — end time should never exceed what server promised
+        if let cap = legacySeconds {
+            return min(endTimeSeconds, cap)
+        }
+        return endTimeSeconds
     }
-    return nil
+
+    return legacySeconds
 }
 
 // MARK: - Golden Hour Live Activity Widget (OneSignal Cross-Platform Implementation)
