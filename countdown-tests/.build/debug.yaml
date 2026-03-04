@@ -1,0 +1,112 @@
+client:
+  name: basic
+  file-system: device-agnostic
+tools: {}
+targets:
+  "CountdownLogic-arm64-apple-macosx26.0-debug.module": ["<CountdownLogic-arm64-apple-macosx26.0-debug.module>"]
+  "CountdownTests-arm64-apple-macosx26.0-debug.module": ["<CountdownTests-arm64-apple-macosx26.0-debug.module>"]
+  "CountdownTestsPackageTests-arm64-apple-macosx26.0-debug.module": ["<CountdownTestsPackageTests-arm64-apple-macosx26.0-debug.module>"]
+  "CountdownTestsPackageTests-arm64-apple-macosx26.0-debug.test": ["<CountdownTestsPackageTests-arm64-apple-macosx26.0-debug.test>"]
+  "PackageStructure": ["<PackageStructure>"]
+  "main": ["<CountdownLogic-arm64-apple-macosx26.0-debug.module>"]
+  "test": ["<CountdownLogic-arm64-apple-macosx26.0-debug.module>","<CountdownTests-arm64-apple-macosx26.0-debug.module>","<CountdownTestsPackageTests-arm64-apple-macosx26.0-debug.test>"]
+default: "main"
+nodes:
+  "/Users/amanda/Desktop/gold-live-activity/countdown-tests/Sources/CountdownLogic/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+  "/Users/amanda/Desktop/gold-live-activity/countdown-tests/Tests/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+commands:
+  "/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownLogic.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/amanda/Desktop/gold-live-activity/countdown-tests/Sources/CountdownLogic/CountdownLogic.swift"]
+    outputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownLogic.build/sources"]
+    description: "Write auxiliary file /Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownLogic.build/sources"
+
+  "/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/amanda/Desktop/gold-live-activity/countdown-tests/Tests/CountdownTestsTests/CountdownTests.swift"]
+    outputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/sources"]
+    description: "Write auxiliary file /Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/sources"
+
+  "/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.derived/runner.swift"]
+    outputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.build/sources"]
+    description: "Write auxiliary file /Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.build/sources"
+
+  "/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.derived/runner.swift":
+    tool: test-entry-point-tool
+    inputs: []
+    outputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.derived/runner.swift"]
+
+  "/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.product/Objects.LinkFileList":
+    tool: write-auxiliary-file
+    inputs: ["<link-file-list>","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownLogic.build/CountdownLogic.swift.o","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/CountdownTests.swift.o","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.build/runner.swift.o"]
+    outputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.product/Objects.LinkFileList"]
+    description: "Write auxiliary file /Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.product/Objects.LinkFileList"
+
+  "/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt":
+    tool: write-auxiliary-file
+    inputs: ["<swift-get-version>","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"]
+    outputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"]
+    always-out-of-date: "true"
+    description: "Write auxiliary file /Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+
+  "<CountdownLogic-arm64-apple-macosx26.0-debug.module>":
+    tool: phony
+    inputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownLogic.build/CountdownLogic.swift.o","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownLogic.swiftmodule"]
+    outputs: ["<CountdownLogic-arm64-apple-macosx26.0-debug.module>"]
+
+  "<CountdownTests-arm64-apple-macosx26.0-debug.module>":
+    tool: phony
+    inputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/CountdownTests.swift.o","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownTests.swiftmodule"]
+    outputs: ["<CountdownTests-arm64-apple-macosx26.0-debug.module>"]
+
+  "<CountdownTestsPackageTests-arm64-apple-macosx26.0-debug.module>":
+    tool: phony
+    inputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.build/runner.swift.o","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownTestsPackageTests.swiftmodule"]
+    outputs: ["<CountdownTestsPackageTests-arm64-apple-macosx26.0-debug.module>"]
+
+  "<CountdownTestsPackageTests-arm64-apple-macosx26.0-debug.test>":
+    tool: phony
+    inputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.xctest/Contents/MacOS/CountdownTestsPackageTests"]
+    outputs: ["<CountdownTestsPackageTests-arm64-apple-macosx26.0-debug.test>"]
+
+  "C.CountdownLogic-arm64-apple-macosx26.0-debug.module":
+    tool: shell
+    inputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/Sources/CountdownLogic/CountdownLogic.swift","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownLogic.build/sources"]
+    outputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownLogic.build/CountdownLogic.swift.o","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownLogic.swiftmodule"]
+    description: "Compiling Swift Module 'CountdownLogic' (1 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","CountdownLogic","-emit-dependencies","-emit-module","-emit-module-path","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownLogic.swiftmodule","-output-file-map","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownLogic.build/output-file-map.json","-parse-as-library","-incremental","-c","@/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownLogic.build/sources","-I","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx10.13","-incremental","-enable-batch-mode","-serialize-diagnostics","-index-store-path","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/index/store","-Onone","-enable-testing","-j10","-DSWIFT_PACKAGE","-DDEBUG","-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE","-module-cache-path","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-parse-as-library","-emit-objc-header","-emit-objc-header-path","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownLogic.build/include/CountdownLogic-Swift.h","-color-diagnostics","-swift-version","5","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-Xcc","-fPIC","-Xcc","-g","-package-name","countdown_tests"]
+
+  "C.CountdownTests-arm64-apple-macosx26.0-debug.module":
+    tool: shell
+    inputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/Tests/CountdownTestsTests/CountdownTests.swift","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownLogic.swiftmodule","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/sources"]
+    outputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/CountdownTests.swift.o","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownTests.swiftmodule"]
+    description: "Compiling Swift Module 'CountdownTests' (1 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","CountdownTests","-emit-dependencies","-emit-module","-emit-module-path","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownTests.swiftmodule","-output-file-map","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/output-file-map.json","-parse-as-library","-incremental","-c","@/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/sources","-I","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx14.0","-incremental","-enable-batch-mode","-serialize-diagnostics","-index-store-path","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/index/store","-Onone","-enable-testing","-Xfrontend","-enable-cross-import-overlays","-j10","-DSWIFT_PACKAGE","-DDEBUG","-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE","-module-cache-path","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-parse-as-library","-color-diagnostics","-swift-version","5","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-Xcc","-fPIC","-Xcc","-g","-package-name","countdown_tests"]
+
+  "C.CountdownTestsPackageTests-arm64-apple-macosx26.0-debug.module":
+    tool: shell
+    inputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.derived/runner.swift","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownTests.swiftmodule","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.build/sources"]
+    outputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.build/runner.swift.o","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownTestsPackageTests.swiftmodule"]
+    description: "Compiling Swift Module 'CountdownTestsPackageTests' (1 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","CountdownTestsPackageTests","-emit-dependencies","-emit-module","-emit-module-path","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownTestsPackageTests.swiftmodule","-output-file-map","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.build/output-file-map.json","-parse-as-library","-incremental","-c","@/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.build/sources","-I","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx10.13","-incremental","-enable-batch-mode","-serialize-diagnostics","-index-store-path","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/index/store","-Onone","-enable-testing","-Xfrontend","-enable-cross-import-overlays","-j10","-DSWIFT_PACKAGE","-DDEBUG","-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE","-module-cache-path","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-parse-as-library","-emit-objc-header","-emit-objc-header-path","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.build/include/CountdownTestsPackageTests-Swift.h","-color-diagnostics","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-Xcc","-fPIC","-Xcc","-g","-package-name","countdown_tests"]
+
+  "C.CountdownTestsPackageTests-arm64-apple-macosx26.0-debug.test":
+    tool: shell
+    inputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownLogic.build/CountdownLogic.swift.o","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/CountdownTests.swift.o","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.build/runner.swift.o","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.product/Objects.LinkFileList"]
+    outputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.xctest/Contents/MacOS/CountdownTestsPackageTests"]
+    description: "Linking ./.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.xctest/Contents/MacOS/CountdownTestsPackageTests"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-L","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug","-o","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.xctest/Contents/MacOS/CountdownTestsPackageTests","-module-name","CountdownTestsPackageTests","-Xlinker","-no_warn_duplicate_libraries","-Xlinker","-bundle","-Xlinker","-rpath","-Xlinker","@loader_path/../../../","@/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTestsPackageTests.product/Objects.LinkFileList","-Xlinker","-rpath","-Xlinker","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-6.2/macosx","-target","arm64-apple-macosx14.0","-Xlinker","-add_ast_path","-Xlinker","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownLogic.swiftmodule","-Xlinker","-add_ast_path","-Xlinker","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownTests.swiftmodule","-Xlinker","-add_ast_path","-Xlinker","/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/Modules/CountdownTestsPackageTests.swiftmodule","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g"]
+
+  "PackageStructure":
+    tool: package-structure-tool
+    inputs: ["/Users/amanda/Desktop/gold-live-activity/countdown-tests/Sources/CountdownLogic/","/Users/amanda/Desktop/gold-live-activity/countdown-tests/Tests/","/Users/amanda/Desktop/gold-live-activity/countdown-tests/Package.swift","/Users/amanda/Desktop/gold-live-activity/countdown-tests/Package.resolved"]
+    outputs: ["<PackageStructure>"]
+    description: "Planning build"
+    allow-missing-inputs: true
+

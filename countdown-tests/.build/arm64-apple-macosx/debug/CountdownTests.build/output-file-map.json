@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/master.swiftdeps"
+  },
+  "/Users/amanda/Desktop/gold-live-activity/countdown-tests/Tests/CountdownTestsTests/CountdownTests.swift": {
+    "dependencies": "/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/CountdownTests.d",
+    "object": "/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/CountdownTests.swift.o",
+    "swiftmodule": "/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/CountdownTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/CountdownTests.swiftdeps",
+    "diagnostics": "/Users/amanda/Desktop/gold-live-activity/countdown-tests/.build/arm64-apple-macosx/debug/CountdownTests.build/CountdownTests.dia"
+  }
+}
