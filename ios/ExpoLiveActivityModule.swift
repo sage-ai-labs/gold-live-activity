@@ -373,7 +373,9 @@ public class ExpoLiveActivityModule: Module {
     AsyncFunction("endAllDefaultActivities") { () -> Int in
       guard #available(iOS 16.2, *) else { return 0 }
 
-      let activities = Activity<DefaultLiveActivityAttributes>.activities
+      let activities = Activity<DefaultLiveActivityAttributes>.activities.filter {
+        $0.activityState == .active || $0.activityState == .stale
+      }
       var count = 0
       for activity in activities {
         await activity.end(activity.content, dismissalPolicy: .immediate)
