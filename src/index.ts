@@ -181,6 +181,16 @@ export function updateActivity(id: string, state: LiveActivityState) {
   if (assertIOS('updateActivity')) return ExpoLiveActivityModule.updateActivity(id, state)
 }
 
+/**
+ * End all OneSignal DefaultLiveActivityAttributes activities immediately.
+ * Used for client-side dismissal when the backend's push-to-end doesn't reach the device.
+ * @returns {Promise<number>} The number of activities that were ended.
+ */
+export async function endAllDefaultActivities(): Promise<number> {
+  if (assertIOS('endAllDefaultActivities')) return await ExpoLiveActivityModule.endAllDefaultActivities()
+  return 0
+}
+
 export function addActivityTokenListener(
   listener: (event: ActivityTokenReceivedEvent) => void
 ): Voidable<EventSubscription> {

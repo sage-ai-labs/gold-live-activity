@@ -1,5 +1,6 @@
 import ActivityKit
 import ExpoModulesCore
+import OneSignalLiveActivities
 
 public class ExpoLiveActivityModule: Module {
   struct LiveActivityState: Record {
@@ -367,6 +368,18 @@ public class ExpoLiveActivityModule: Module {
         try await updateImages(state: state, newState: &newState)
         await activity.update(ActivityContent(state: newState, staleDate: nil))
       }
+    }
+
+    AsyncFunction("endAllDefaultActivities") { () -> Int in
+      guard #available(iOS 16.2, *) else { return 0 }
+
+      let activities = Activity<DefaultLiveActivityAttributes>.activities
+      var count = 0
+      for activity in activities {
+        await activity.end(activity.content, dismissalPolicy: .immediate)
+        count += 1
+      }
+      return count
     }
   }
 }
